@@ -5,8 +5,8 @@
 ![Rails Version](https://img.shields.io/badge/rails-8.1.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-> **Canlı Uygulama URL:** [https://sentinel-ops.onrender.com](https://sentinel-ops.onrender.com) *(Render yapılandırması mevcut; URL bu çalışma ortamından doğrulanamadı.)*  
-> **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)  
+> **Canlı Uygulama URL:** [https://sentinel-ops.onrender.com](https://sentinel-ops.onrender.com) *(Render yapılandırması mevcut; URL bu çalışma ortamından doğrulanamadı.)*
+> **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)
 > **İlham Kaynağı:** Bu proje, kurumsal BT dünyasının sektör standardı olan **ServiceNow (IT Service Management - Incident Management)** ürününün mimarisinden ve ITIL v4 operasyon standartlarından ilham alınarak geliştirilmiştir. Orijinal marka adı veya logosu uygulamada yer almaz.
 
 ---
