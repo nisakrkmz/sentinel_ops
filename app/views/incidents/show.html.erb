@@ -1,0 +1,354 @@
+<div style="margin-bottom: 1.25rem;">
+  <%= link_to root_path, style: "font-size: 0.84rem; color: var(--brand-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;" do %>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <span>← Bilet Listesine Dön</span>
+  <% end %>
+</div>
+
+<!-- =========================================================================
+     Olay başlığı
+     ========================================================================= -->
+<div class="enterprise-card" style="margin-bottom: 1.5rem;">
+  <div style="padding: 1.25rem 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+          <span class="ticket-number-badge" style="font-size: 0.95rem; padding: 0.25rem 0.65rem;">
+            <%= @incident.number %>
+          </span>
+
+          <% priority_class = case @incident.priority
+                              when "p1_critical" then "badge-p1"
+                              when "p2_high" then "badge-p2"
+                              when "p3_moderate" then "badge-p3"
+                              else "badge-p4"
+                              end %>
+          <span class="badge <%= priority_class %>" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
+            <%= @incident.priority_label %>
+          </span>
+
+          <span class="service-pill" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
+            <%= @incident.service_affected %>
+          </span>
+
+          <span style="font-size: 0.78rem; color: var(--text-dim);">
+            Açılış: <%= l(@incident.created_at, format: :short) %> · Talep Eden: <strong><%= @incident.requested_by %></strong>
+          </span>
+        </div>
+
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 0.35rem;">
+          <%= @incident.short_description %>
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.86rem;">
+          Atanan Grup: <strong style="color: var(--text-secondary);"><%= @incident.assignment_group %></strong> ·
+          Atanan Uzman: <strong style="color: var(--text-secondary);"><%= @incident.assigned_to %></strong>
+        </p>
+      </div>
+
+      <!-- SLA zaman kuralı -->
+      <div style="background: var(--bg-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1rem 1.35rem; min-width: 260px; text-align: right;">
+        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700;">
+          Hedef SLA (<%= @incident.priority_short_label %>)
+        </div>
+
+        <% if @incident.resolved? %>
+          <div style="font-size: 1.35rem; font-weight: 800; color: var(--color-success); margin-top: 0.25rem;">
+            ✓ ÇÖZÜLDÜ
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted);">
+            Kapanış: <%= l(@incident.resolved_at, format: :short) rescue "" %>
+          </div>
+        <% elsif @incident.sla_breached? %>
+          <div style="font-size: 1.35rem; font-weight: 800; color: var(--color-critical); margin-top: 0.25rem;">
+            ⚠ SLA BREACHED
+          </div>
+          <div style="font-size: 0.76rem; color: var(--color-critical); font-weight: 600;">
+            Hedef süre aşıldı (<%= l(@incident.sla_breached_at, format: :short) rescue "" %>)
+          </div>
+        <% else %>
+          <% rem = @incident.sla_time_remaining_seconds %>
+          <div style="font-size: 1.65rem; font-weight: 800; color: <%= rem < 300 ? 'var(--color-critical)' : 'var(--brand-primary)' %>; font-family: var(--font-mono); margin-top: 0.25rem; line-height: 1.1;">
+            <%= "%02d:%02d" % [rem / 60, rem % 60] %>
+          </div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            Kalan Hedef Çözüm Süresi
+          </div>
+          <%= button_to check_sla_incident_path(@incident), method: :post, class: "btn btn-secondary btn-sm", style: "width: 100%;", data: { turbo: false } do %>
+            <span>⏱ SLA Kuralını Denetle</span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Durum akışı -->
+    <div class="itsm-stepper">
+      <div class="stepper-step <%= 'completed' if @incident.in_progress? || @incident.on_hold? || @incident.resolved? %> <%= 'active' if @incident.new_ticket? %>">
+        <span class="step-num">1</span>
+        <span>New (Yeni)</span>
+      </div>
+
+      <div class="stepper-step <%= 'completed' if @incident.resolved? %> <%= 'active' if @incident.in_progress? %>">
+        <span class="step-num">2</span>
+        <span>In Progress (İşlemde)</span>
+      </div>
+
+      <div class="stepper-step <%= 'on-hold-active' if @incident.on_hold? %>">
+        <span class="step-num">3</span>
+        <span>On Hold (Beklemede)</span>
+      </div>
+
+      <div class="stepper-step <%= 'completed' if @incident.resolved? %>">
+        <span class="step-num">4</span>
+        <span>Resolved (Çözüldü)</span>
+      </div>
+    </div>
+
+    <!-- Durum aksiyonları -->
+    <div style="padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ITSM Durum Akışı:</span>
+
+      <% if @incident.new_ticket? %>
+        <%= button_to start_progress_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false } do %>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <span>İşleme Al (In Progress)</span>
+        <% end %>
+      <% elsif @incident.in_progress? %>
+        <!-- Beklemeye Al Butonu -->
+        <button type="button" onclick="document.getElementById('on-hold-form-box').style.display='block';" class="btn btn-warning btn-sm">
+          <span>Beklemeye Al (On Hold)</span>
+        </button>
+
+        <!-- Çözümleme Modal / Form Tetikleyici -->
+        <button type="button" onclick="document.getElementById('resolve-form-box').style.display='block';" class="btn btn-success btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Bileti Çözümle & Kapat (Resolve)</span>
+        </button>
+      <% elsif @incident.on_hold? %>
+        <%= button_to start_progress_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false } do %>
+          <span>Beklemeyi Kaldır & Devam Et (In Progress)</span>
+        <% end %>
+
+        <button type="button" onclick="document.getElementById('resolve-form-box').style.display='block';" class="btn btn-success btn-sm">
+          <span>Bileti Çözümle & Kapat (Resolve)</span>
+        </button>
+      <% else %>
+        <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+          ✓ Bu bilet çözülmüştür ve kurumsal Knowledge Base hafızasına arşivlenmiştir.
+        </span>
+      <% end %>
+    </div>
+
+    <!-- On Hold Gerekçesi Formu (Gizli/Açılır) -->
+    <div id="on-hold-form-box" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--bg-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-sm);">
+      <%= form_with url: put_on_hold_incident_path(@incident), method: :post, local: true do |f| %>
+        <div class="form-group" style="margin-bottom: 0.5rem;">
+          <label class="form-label">Bekletme Gerekçesi (On Hold Reason):</label>
+          <input type="text" name="on_hold_reason" class="form-input" placeholder="Örn: 3. parti SAP/Cisco tedarikçi desteği bekleniyor..." required>
+        </div>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button type="button" onclick="document.getElementById('on-hold-form-box').style.display='none';" class="btn btn-secondary btn-sm">İptal</button>
+          <%= f.submit "On Hold Olarak Kaydet", class: "btn btn-warning btn-sm" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Çözümleme Formu (Gizli/Açılır) -->
+    <div id="resolve-form-box" style="display: none; margin-top: 1rem; padding: 1.25rem; background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: var(--radius-sm);">
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: #166534; margin-bottom: 0.75rem;">
+        Bileti Çözümleme & Knowledge Base'e Ekleme
+      </h4>
+      <%= form_with url: resolve_incident_path(@incident), method: :post, local: true do |f| %>
+        <div class="form-group">
+          <label class="form-label" style="color: #166534;">Kök Neden Analizi (Root Cause Analysis):</label>
+          <input type="text" id="input_root_cause" name="root_cause_analysis" class="form-input" placeholder="Örn: SAP RFC work process havuz sınırı 12'ye ulaştı..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color: #166534;">Uygulanan Çözüm Notları (Resolution Notes):</label>
+          <textarea id="input_resolution_notes" name="resolution_notes" rows="3" class="form-textarea" placeholder="Örn: SM50 work process havuzu 36'ya yükseltildi ve cron kuyruğu güncellendi..." required></textarea>
+        </div>
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <button type="button" onclick="document.getElementById('resolve-form-box').style.display='none';" class="btn btn-secondary btn-sm">İptal</button>
+          <%= f.submit "Bileti Çöz & Kapat", class: "btn btn-success btn-sm" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     SMART INCIDENT KNOWLEDGE MATCHER (Geçmiş Olay Hafızası)
+     ========================================================================= -->
+<% if @similar_incidents.any? %>
+  <div class="knowledge-matcher-card">
+    <div class="matcher-header">
+      <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <span class="matcher-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Smart Incident Knowledge Matcher
+        </span>
+        <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);">
+          Geçmiş Olay Hafızası Eşleşti!
+        </h3>
+      </div>
+      <span style="font-size: 0.78rem; color: #4338ca; font-weight: 600;">
+        Benzer geçmiş olayın çözüm notlarını tek adımda uygula
+      </span>
+    </div>
+
+    <% @similar_incidents.each do |match| %>
+      <% past = match[:incident] %>
+      <div class="matcher-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <span class="similarity-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                %<%= match[:similarity_score] %> Benzerlik Skoru
+              </span>
+              <span class="ticket-number-badge"><%= past.number %></span>
+              <span class="service-pill"><%= past.service_affected %></span>
+            </div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
+              <%= past.short_description %>
+            </h4>
+          </div>
+
+          <!-- 1-Tıkla Çözümü Uygula Aksiyon Butonu -->
+          <% unless @incident.resolved? %>
+            <%= button_to apply_knowledge_incident_path(@incident, past_incident_id: past.id), method: :post, class: "btn btn-purple btn-sm", data: { turbo: false } do %>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>⚡ Bu Çözümü Uygula (1-Tıkla Çöz)</span>
+            <% end %>
+          <% end %>
+        </div>
+
+        <!-- Çözüm & Kök Neden Detayı -->
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 0.85rem 1rem; font-size: 0.84rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">
+              Geçmişte Doğrulanan Kök Neden (RCA):
+            </div>
+            <p style="color: var(--text-secondary); line-height: 1.4;">
+              <%= past.root_cause_analysis %>
+            </p>
+          </div>
+
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 0.25rem;">
+              Uygulanan Kesin Çözüm Notu:
+            </div>
+            <p style="color: #14532d; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.4; white-space: pre-line;">
+              <%= past.resolution_notes || past.resolution_steps %>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- =========================================================================
+     İki kolonlu olay formu ve zaman çizelgesi
+     ========================================================================= -->
+<div style="display: grid; grid-template-columns: 1.7fr 1fr; gap: 1.5rem;">
+  <!-- Sol Kolon: Bilet Ayrıntıları (Form Alanları) -->
+  <div class="enterprise-card">
+    <div class="enterprise-card-header">
+      <span class="card-title-text">Bilet Ayrıntıları (Incident Form Data)</span>
+      <span style="font-size: 0.78rem; color: var(--text-dim);">SentinelOps Olay Formu</span>
+    </div>
+
+    <div style="padding: 1.25rem;">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Bilet No</label>
+          <input type="text" class="form-input" value="<%= @incident.number %>" readonly style="background: var(--bg-subtle); font-family: var(--font-mono); font-weight: 700;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Talep Eden (Caller)</label>
+          <input type="text" class="form-input" value="<%= @incident.requested_by %>" readonly style="background: var(--bg-subtle);">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Etkilenen Kurumsal Servis</label>
+          <input type="text" class="form-input" value="<%= @incident.service_affected %>" readonly style="background: var(--bg-subtle);">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Kategori</label>
+          <input type="text" class="form-input" value="<%= @incident.category %>" readonly style="background: var(--bg-subtle);">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Öncelik (Priority)</label>
+          <input type="text" class="form-input" value="<%= @incident.priority_label %>" readonly style="background: var(--bg-subtle); font-weight: 600;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Atanan Destek Grubu</label>
+          <input type="text" class="form-input" value="<%= @incident.assignment_group %>" readonly style="background: var(--bg-subtle);">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Kısa Açıklama (Short Description)</label>
+        <input type="text" class="form-input" value="<%= @incident.short_description %>" readonly style="background: var(--bg-subtle); font-weight: 600;">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Detaylı Açıklama (Description)</label>
+        <textarea rows="4" class="form-textarea" readonly style="background: var(--bg-subtle);"><%= @incident.description %></textarea>
+      </div>
+
+      <% if @incident.resolved? %>
+        <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+          <h4 style="font-size: 0.88rem; font-weight: 700; color: #166534; margin-bottom: 0.5rem;">
+            ✓ Kapanış & Çözüm Bilgileri (Resolution Information)
+          </h4>
+          <p style="font-size: 0.82rem; color: #14532d; margin-bottom: 0.35rem;">
+            <strong>Kök Neden:</strong> <%= @incident.root_cause_analysis %>
+          </p>
+          <p style="font-size: 0.82rem; color: #14532d; font-family: var(--font-mono); white-space: pre-line;">
+            <strong>Çözüm Notları:</strong> <%= @incident.resolution_notes || @incident.resolution_steps %>
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Sağ Kolon: Zaman Çizelgesi & Olay Akışı (Activity Stream) -->
+  <div class="enterprise-card">
+    <div class="enterprise-card-header">
+      <span class="card-title-text">Olay Akışı & İş Notları (Activity Stream)</span>
+      <span class="card-count-badge"><%= @timeline_events.count %> İşlem</span>
+    </div>
+
+    <div style="padding: 1.25rem;">
+      <div style="border-left: 2px solid var(--border-medium); padding-left: 1.25rem; margin-left: 0.5rem;">
+        <% @timeline_events.each do |event| %>
+          <div style="position: relative; margin-bottom: 1.25rem;">
+            <div style="position: absolute; left: -1.7rem; top: 0.15rem; width: 10px; height: 10px; border-radius: 50%; background: <%= event.event_type == 'sla_breached' ? '#dc2626' : (event.event_type == 'resolved' ? '#16a34a' : '#2563eb') %>; border: 2px solid #ffffff; box-shadow: 0 0 0 2px <%= event.event_type == 'sla_breached' ? '#dc2626' : (event.event_type == 'resolved' ? '#16a34a' : '#2563eb') %>;"></div>
+
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.2rem;">
+              <span style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: <%= event.event_type == 'sla_breached' ? '#dc2626' : 'var(--text-secondary)' %>;">
+                <%= event.event_type.titleize %>
+              </span>
+              <span style="font-size: 0.72rem; color: var(--text-dim);">
+                <%= l(event.created_at, format: :short) %>
+              </span>
+            </div>
+
+            <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; background: var(--bg-subtle); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-light);">
+              <%= event.message %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <title>SentinelOps — Enterprise IT Service Management (ITSM)</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Include application styles %>
+    <%= stylesheet_link_tag :application, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <!-- SentinelOps enterprise header -->
+    <header class="enterprise-header">
+      <!-- Top Level Instance Bar -->
+      <div class="header-topbar">
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+          <%= link_to root_path, class: "header-brand" do %>
+            <div class="header-logo-icon">
+              <!-- SentinelOps Enterprise Shield -->
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <circle cx="12" cy="11" r="3"/>
+                <path d="m9 17 3-2 3 2"/>
+              </svg>
+            </div>
+            <div>
+              <span class="header-title-text">SentinelOps</span>
+              <span class="header-badge-tag">ITSM Enterprise</span>
+            </div>
+          <% end %>
+
+          <div class="header-env-indicator">
+            <span class="dot"></span>
+            <span>Demo Instance</span>
+          </div>
+        </div>
+
+        <!-- Global Search Bar & Live Simulator -->
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+          <%= form_with url: root_path, method: :get, local: true, class: "header-search-box" do %>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="margin-right: 0.4rem;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" name="q" value="<%= params[:q] %>" placeholder="Bilet No, Servis veya Açıklama Ara...">
+          <% end %>
+
+          <!-- Hızlı Canlı Simülasyon Dropdown / Butonları -->
+          <%= button_to simulate_incidents_path(scenario: "sap_erp"), method: :post, class: "btn btn-purple btn-sm", data: { turbo: false }, title: "SAP ERP Batch Pool Exhaustion Simülasyonu" do %>
+            <span>⚡ Kurumsal Simülasyon</span>
+          <% end %>
+
+          <%= link_to new_incident_path, class: "btn btn-primary btn-sm" do %>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>+ Yeni Bilet Aç</span>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- ITSM Navigation Bar -->
+      <nav class="header-navbar">
+        <div class="header-nav-links">
+          <%= link_to root_path, class: "header-nav-link #{'active' if current_page?(root_path)}" do %>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span>Incident Management (Olay Yönetimi)</span>
+          <% end %>
+
+          <%= link_to root_path(filter: "resolved"), class: "header-nav-link #{'active' if params[:filter] == 'resolved'}" do %>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>Knowledge Base (Incident Memory)</span>
+          <% end %>
+
+          <%= link_to root_path(filter: "p1"), class: "header-nav-link #{'active' if params[:filter] == 'p1'}" do %>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Major Incidents (P1 Kritik)</span>
+          <% end %>
+
+          <%= link_to root_path(filter: "breached"), class: "header-nav-link #{'active' if params[:filter] == 'breached'}" do %>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>SLA Performance & Breaches</span>
+          <% end %>
+        </div>
+
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 500;">
+          ITIL v4 Service Operations Aligned
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-container">
+      <% if notice %>
+        <div class="flash-message flash-notice">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div><%= notice %></div>
+        </div>
+      <% end %>
+
+      <% if alert %>
+        <div class="flash-message flash-alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><%= alert %></div>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <!-- Corporate Footer -->
+    <footer style="border-top: 1px solid var(--border-light); padding: 2rem 0; margin-top: 3rem; text-align: center; color: var(--text-muted); font-size: 0.82rem; background: #ffffff;">
+      <div class="app-container" style="padding-top: 0; padding-bottom: 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="text-align: left;">
+            <p style="font-weight: 700; color: var(--text-primary);">SentinelOps Enterprise ITSM Platform</p>
+            <p style="color: var(--text-dim); font-size: 0.78rem;">Fortune 500 ölçeğinde BT Servis & Olay Yönetimi ve Akıllı Olay Hafızası</p>
+          </div>
+          <div style="text-align: right; font-size: 0.78rem; color: var(--text-dim);">
+            <p>Ruby on Rails 8.1 · Production Core Engine</p>
+            <p>ITIL Incident Management Framework Inspired</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

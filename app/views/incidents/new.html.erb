@@ -1,0 +1,122 @@
+<div style="max-width: 960px; margin: 0 auto;">
+  <div style="margin-bottom: 1.25rem;">
+    <%= link_to root_path, style: "font-size: 0.84rem; color: var(--brand-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;" do %>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <span>← Bilet Listesine Dön</span>
+    <% end %>
+  </div>
+
+  <div class="enterprise-card">
+    <div class="enterprise-card-header">
+      <div class="card-title-group">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <span class="card-title-text">Yeni ITSM Olay Bildirimi (Create Incident)</span>
+      </div>
+      <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">SentinelOps Olay Formu</span>
+    </div>
+
+    <!-- Hızlı Demo / Sunum Şablonları (Tek Tıkla Simüle Et) -->
+    <div style="background: #f8fafc; border-bottom: 1px solid var(--border-light); padding: 1rem 1.5rem;">
+      <div style="font-size: 0.76rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+        ⚡ HIZLI TEST & CANLI SUNUM ŞABLONLARI (Incident Memory Testi):
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <%= button_to simulate_incidents_path(scenario: "sap_erp"), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } do %>
+          <span>💼 SAP ERP Batch Pool Exhaustion (P1)</span>
+        <% end %>
+        <%= button_to simulate_incidents_path(scenario: "vpn_gateway"), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } do %>
+          <span>🌐 Global VPN IP Pool Exhaustion (P2)</span>
+        <% end %>
+        <%= button_to simulate_incidents_path(scenario: "active_directory"), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } do %>
+          <span>🔑 Active Directory Kerberos Clock Skew (P2)</span>
+        <% end %>
+        <%= button_to simulate_incidents_path(scenario: "payment_gateway"), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } do %>
+          <span>💳 Corporate Payment Gateway 504 (P1)</span>
+        <% end %>
+      </div>
+    </div>
+
+    <div style="padding: 1.5rem;">
+      <%= form_with model: @incident, local: true do |f| %>
+        <% if @incident.errors.any? %>
+          <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; color: #991b1b;">
+            <strong style="font-size: 0.88rem;">Lütfen form hatalarını düzeltin:</strong>
+            <ul style="margin-top: 0.4rem; padding-left: 1.25rem; font-size: 0.82rem;">
+              <% @incident.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <%= f.label :requested_by, "Talep Eden Çalışan (Caller / Requested By)", class: "form-label" %>
+            <%= f.text_field :requested_by, class: "form-input", placeholder: "Örn: Sarah Jenkins (Finance VP)", required: true %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :service_affected, "Etkilenen Kurumsal Servis (Service Affected)", class: "form-label" %>
+            <%= f.select :service_affected, [
+              ["SAP ERP Production", "SAP ERP"],
+              ["Global VPN Gateway", "Global VPN Gateway"],
+              ["Active Directory SSO", "Active Directory SSO"],
+              ["Corporate Payment Gateway", "Payment Gateway"],
+              ["Office 365 Exchange", "Office 365 Exchange"],
+              ["Salesforce CRM Integration", "Salesforce CRM"]
+            ], {}, class: "form-select" %>
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div class="form-group">
+            <%= f.label :priority, "Öncelik & SLA (Priority)", class: "form-label" %>
+            <%= f.select :priority, [
+              ["P1 - Critical (15 Dakika SLA)", "p1_critical"],
+              ["P2 - High (2 Saat SLA)", "p2_high"],
+              ["P3 - Moderate (4 Saat SLA)", "p3_moderate"],
+              ["P4 - Low (24 Saat SLA)", "p4_low"]
+            ], {}, class: "form-select" %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :category, "Kategori (Category)", class: "form-label" %>
+            <%= f.select :category, [
+              ["Enterprise Software", "Enterprise Software"],
+              ["Network Infrastructure", "Network Infrastructure"],
+              ["Identity & Security", "Identity & Security"],
+              ["Cloud Infrastructure", "Cloud Infrastructure"],
+              ["Workstation & Hardware", "Workstation & Hardware"]
+            ], {}, class: "form-select" %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :assignment_group, "Atanan Destek Grubu (Assignment Group)", class: "form-label" %>
+            <%= f.select :assignment_group, [
+              ["Enterprise ERP Operations", "Enterprise ERP Operations"],
+              ["Global Network Operations", "Global Network Operations"],
+              ["Identity & Access Management", "Identity & Access Management"],
+              ["Platform Operations", "Platform Operations"],
+              ["ITSM Service Desk", "ITSM Service Desk"]
+            ], {}, class: "form-select" %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :short_description, "Kısa Açıklama (Short Description)", class: "form-label" %>
+          <%= f.text_field :short_description, class: "form-input", placeholder: "Örn: SAP ERP S/4HANA Background Batch Pool Exhaustion (RFC 500 Connection Timeout)", required: true %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :description, "Detaylı Hata Açıklaması / Loglar (Description)", class: "form-label" %>
+          <%= f.text_area :description, rows: 5, class: "form-textarea", placeholder: "Arızanın ayrıntılarını, kullanıcı şikayetlerini ve varsa sistem loglarını buraya girin...", style: "font-family: var(--font-sans);" %>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+          <%= link_to "İptal", root_path, class: "btn btn-secondary" %>
+          <%= f.submit "Bileti Oluştur & SLA Başlat", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

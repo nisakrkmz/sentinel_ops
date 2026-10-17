@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: sentinel-ops
+    env: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: 2
+      - key: RAILS_MAX_THREADS
+        value: 5
