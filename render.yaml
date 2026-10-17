@@ -9,6 +9,8 @@ services:
       - key: RAILS_MASTER_KEY
         sync: false
       - key: WEB_CONCURRENCY
-        value: 2
+        value: 1
       - key: RAILS_MAX_THREADS
-        value: 5
+        value: 3
+      - key: DATABASE_PATH
+        value: /rails/storage/production.sqlite3
