@@ -18,10 +18,10 @@ jobs:
           bundler-cache: true
 
       - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager -k
+        run: bundle exec brakeman --no-pager -k
 
       - name: Scan for known security vulnerabilities in gems used
-        run: bin/bundler-audit
+        run: bundle exec bundler-audit
 
   lint:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
           bundler-cache: true
 
       - name: Lint code for consistent style
-        run: bin/rubocop -f github
+        run: bundle exec rubocop -f github
 
   test:
     runs-on: ubuntu-latest
@@ -54,4 +54,4 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-        run: bin/rails db:test:prepare test
+        run: bundle exec rails db:test:prepare test
