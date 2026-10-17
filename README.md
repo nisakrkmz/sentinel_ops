@@ -5,7 +5,7 @@
 ![Rails Version](https://img.shields.io/badge/rails-8.1.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-> **Canlı Uygulama URL:** [https://sentinel-ops.onrender.com](https://sentinel-ops.onrender.com) *(Render yapılandırması mevcut; URL bu çalışma ortamından doğrulanamadı.)*
+> **Canlı Uygulama URL:** Henüz yayınlanmadı. Render yapılandırması [render.yaml](./render.yaml) dosyasında bulunuyor, ancak Render servisi henüz oluşturulmadı.
 > **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)
 > **İlham Kaynağı:** Bu proje, kurumsal BT dünyasının sektör standardı olan **ServiceNow (IT Service Management - Incident Management)** ürününün mimarisinden ve ITIL v4 operasyon standartlarından ilham alınarak geliştirilmiştir. Orijinal marka adı veya logosu uygulamada yer almaz.
 
@@ -104,7 +104,7 @@ SentinelOps yerel olarak **ITSM Olay Yönetimi (Incident Management)** akışın
 3. **Rol Tabanlı Erişim Kontrolü (RBAC):** ServiceNow'daki yüzlerce yetki rolü (admin, itil, itil_admin, ess) yerine tüm bilet aksiyonları hızlı sunum ve değerlendirme amacıyla açık bırakılmıştır.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
-6. **Canlı yayın ve CI kanıtı:** Kod GitHub'da yayımlandı; GitHub Actions sonucunun yeşil olduğu henüz doğrulanmadı. Render yapılandırması mevcut ama canlı uygulama bu ortamdan doğrulanamadı. Canlı deploy ve başarılı Actions olmadan teslim ölçütleri tamamlanmış sayılmaz.
+6. **Canlı yayın ve CI kanıtı:** Kod GitHub'da yayımlandı. GitHub Actions, `74ffb01` commit-inde başarılı geçti. Render yapılandırması mevcut ancak Render servisi henüz oluşturulmadı; canlı deploy olmadan teslim ölçütleri tamamlanmış sayılmaz.
 7. **Kullanıcı yorumu kanıtı:** G2'deki tekil yorum sayfası açılamadı; kişiye/yoruma özgü permalink doğrulanmadı. 100 puan kriteri bu yüzden henüz kanıtlanmış değil.
 8. **Kalıcı veritabanı diski:** Render yapılandırması SQLite kullanıyor ve kalıcı disk tanımlamıyor; yeniden deploy/uyku sonrası demo kayıtlarının korunacağı garanti edilmez.
 
