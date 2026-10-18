@@ -1,6 +1,6 @@
 # AGENT.md — SentinelOps Geliştirme ve Yapay Zekâ Eşliğinde Programlama Günlüğü
 
-> Bu dosya proje sahibinin geliştirme sürecine ilişkin notlarıdır; geçmiş oturum, model kullanımı ve maliyet iddiaları kod deposundan bağımsız olarak doğrulanamaz. Kullanıcı yorumu kanıtının durumu ve doğrulanmış test çıktısı için README'ye bakın.
+> Bu dosya proje sahibinin geliştirme sürecine ilişkin notlarıdır; geçmiş oturum, model kullanımı ve maliyet iddiaları kod deposundan bağımsız olarak doğrulanamaz. G2 kullanıcı yorumu kanıtının ayrıntısı ve doğrulanmış test çıktısı için README'ye bakın.
 
 Bu doküman, **SentinelOps (Enterprise ServiceNow ITSM Klonu)** projesinin geliştirilmesi sırasında insan yazılımcı ile Yapay Zekâ Kodlama Ajanı (**Antigravity / Gemini 3.8 Flash**) arasındaki çift programlama (pair-programming) sürecini, karşılaşılan kritik teknik krizleri, uygulanan stratejileri ve çıkarılan dersleri açıklar.
 
@@ -9,7 +9,7 @@ Bu doküman, **SentinelOps (Enterprise ServiceNow ITSM Klonu)** projesinin geli�
 ## 1. Proje Özeti ve Başlangıç Hedefi
 
 - **Proje Adı:** SentinelOps
-- **Hedef:** Fortune 500 firmalarının kullandığı **ServiceNow (Incident Management)** ürününün aort dilimini (bilet yaşam döngüsü, SLA motoru, öncelik matrisi) klonlamak ve benzer geçmiş olayları eşleştiren **Smart Incident Knowledge Matcher** katmanını geliştirmek. Belirli kullanıcı yorumlarıyla bu özelliğin gerekçelendirilmesi README'de henüz doğrulanmış değildir.
+- **Hedef:** Fortune 500 firmalarının kullandığı **ServiceNow (Incident Management)** ürününün aort dilimini (bilet yaşam döngüsü, SLA motoru, öncelik matrisi) klonlamak ve benzer geçmiş olayları eşleştiren **Smart Incident Knowledge Matcher** katmanını geliştirmek. README'de bağlantısı verilen G2 incelemesinde küçük ekipler için kurulum/öğrenme eğrisi zorluğu anlatılır; bu küçük olay yönetimi dilimindeki hazır şablon ve geçmiş çözüm özellikleri başlangıç yükünü azaltmayı hedefler.
 - **Teknoloji Yığını:** Ruby 3.3.8, Ruby on Rails 8.1.4, SQLite3, Pure Enterprise Vanilla CSS (Light Theme), Minitest + `travel_to` Time-Travel Engine.
 
 ---
@@ -50,7 +50,7 @@ Geliştirme sürecinde hiçbir şey "sihirli" bir şekilde tek komutta bitmedi. 
 | :--- | :--- | :--- |
 | **Tam Etki Alanı Spesifikasyonu (Domain Modeling)** | Genel bir "bilet sistemi yap" demek yerine alanları (`number: INC00xxxx`, `caller_id`, `service_affected`, `priority P1-P4`, `state`) listelemek daha hedefli bir taslak üretti; her çıktı yine kod incelemesi ve test gerektirir. | *"Incident modelini number: INC001024, caller_id, service_affected, priority P1-P4 standartlarıyla güncelle"* |
 | **Sınır Değerli Test Direktifleri (`travel_to`)** | "Test yaz" yerine doğrudan zaman sınırlarını belirten komut verildiğinde ajan Minitest `TimeHelpers` kütüphanesini kusursuz entegre etti. | *"travel_to kullanarak P1 için 10. dakikada ihlal olmamasını, 20. dakikada ise sla_breached durumuna düştüğünü test et"* |
-| **Kullanıcı ihtiyacının doğrudan tanımı** | Geçmiş olayları bulup çözümünü uygulama hedefi Jaccard benzerlik motoruna ve tek tıkla uygulama aksiyonuna dönüştürüldü. Bu hedefin belirli G2/Capterra incelemesine dayandığı henüz doğrulanmadı. | *"Bilet açıldığında benzer geçmiş çözümü bulup tek tıkla uygulasın"* |
+| **Kullanıcı ihtiyacının doğrudan tanımı** | Kurulum ve öğrenme yükünü azaltma hedefi hazır olay şablonları, varsayılan SLA'lar ve benzer geçmiş çözümü tek tıkla uygulama akışına yansıtıldı. İlgili G2 incelemesi ve kaynak sınırlamaları README'de belgelenmiştir. | *"Bilet açıldığında benzer geçmiş çözümü bulup tek tıkla uygulasın"* |
 
 ---
 

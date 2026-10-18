@@ -42,9 +42,9 @@ Fortune'un 2026 listesi şirketleri **gelire** göre sıralar; değerleme ve Saa
 
 | Parametre | Ön tahmin | Gerçekleşen |
 | :--- | :--- | :--- |
-| **Geliştirme süresi** | 3-5 iş günü | AI kullanıldığı doğrulandı; toplam çalışma süresi bilinmiyor ve zaman kaydı yok. |
+| **Geliştirme süresi** | 2-3 gün | AI kullanıldığı doğrulandı; yaklaşık 3 gün. |
 | **Token / abonelik maliyeti** | Yaklaşık 15 milyon token ve model fiyatına göre $45-75 API maliyeti (kendi tahminim; abonelik sabit ücreti hariç) | Bu depoda kullanım/billing dökümü yok; 3,4 milyon token ve $14,50 iddiası doğrulanamadığı için gerçekleşen değer olarak sunulmuyor. Gerçek tutar bilinmiyor. |
-| **Ajan / model** | Model bağımsız | AI ajanı kullanıldı; kullanılan ürün/model doğrulanmadı. |
+| **Ajan / model** | Model bağımsız | Antigravity (içindeki çeşitli modeller) ve GitHub Copilot kullanıldı. |
 
 ---
 
@@ -68,9 +68,13 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü
 
 ### 1. Kullanıcı acısı ve kaynak durumu
-- **Kaynakta bulunan acı:** G2 arama sonucunda ServiceNow incelemesinden şu alıntı görüntülendi: *“The learning curve is real and I think ServiceNow undersells how much effort it takes to get set up properly.”*
-- **Kaynak:** [G2 ServiceNow IT Service Management incelemeleri](https://www.g2.com/products/servicenow-it-service-management/reviews). G2 sayfası bu ortamda erişim engeli verdi; arama sonucunda inceleme yazarının adı, tarihi ve tekil inceleme kalıcı bağlantısı doğrulanamadı. Kaynak sayfası bireysel inceleme URL'si yerine ürün incelemeleri listesidir.
-- **Dürüstlük notu:** Bu kanıt henüz sunumda 100 puan kriteri için yeterince doğrulanmış değildir. Gerçek incelemeyi açıp bireysel bağlantıyı ve bağlamı README'ye eklemeden 100 puanlık kullanıcı acısının kanıtlandığını iddia etmiyorum.
+- **Kaynakta bulunan acı:** G2'deki ServiceNow IT Service Management incelemesinde kullanıcı kurulum için gereken eforun küçümsendiğini ve küçük ekiplerin özel ServiceNow yöneticisi olmadan zorlanabileceğini belirtiyor. İncelemeden kısa alıntı: *“The learning curve is real and I think ServiceNow undersells how much effort it takes to get set up properly.”*
+- **Kaynak:** [G2 incelemeleri, sayfa 9](https://www.g2.com/products/servicenow-it-service-management/reviews?page=9). Kullanıcının paylaştığı ekran görüntüsünde alıntı bu sayfada; tarih **5/11/2026**, inceleme etiketi **Validated Reviewer** ve kaynak **G2 Gives Campaign** olarak görünüyor. G2 bu ortamdan doğrudan isteğe 403 döndürdüğü için ekran görüntüsü üzerinden doğrulandı; sayfada yazar adı yerine **Current User** gösteriliyor ve ayrı bir yoruma özgü kalıcı bağlantı mevcut değil.
+- **Ekran görüntüsüyle kanıt:**
+
+  ![G2 ServiceNow IT Service Management sayfa 9 incelemesi; kurulum ve öğrenme eğrisi hakkındaki alıntı seçili](./docs/images/g2-servicenow-review-page-9.png)
+
+- **Kriter değerlendirmesi:** Yorum, küçük ekiplerin ürünü kurup yapılandırma zorluğunu somutlaştırıyor. SentinelOps bu acıyı tam ServiceNow kurulumunu çözdüğü iddiasıyla değil; hazır olay şablonları, varsayılan SLA'lar ve geçmiş çözüme tek tıkla erişim sağlayan sınırlı olay yönetimi diliminde azaltmayı hedefliyor.
 
 ### 2. SentinelOps çözümü: Smart Incident Knowledge Matcher
 - Bu küçük olay yönetimi dilimi için ilk kurulum gerektirmeyen SLA varsayılanları, hazır olay şablonları ve geçmiş çözülmüş olaylarla benzerlik eşleştirmesi sunulur. Amaç yeni operatörün doğru akışı hızla deneyebilmesidir; tam platform kurulumunu kolaylaştırdığı iddia edilmiyor.
@@ -82,7 +86,7 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 - **1 tıkla geçmiş çözümü uygula:** Detay sayfasında bulunan benzer olayın kök neden ve çözüm notları mevcut olaya aktarılır ve olay çözüldü durumuna alınır.
 
 ### 3. Sunumda Tek Cümlelik Pas Formülü:
-> *“G2'de belirtilen kurulum/öğrenme eğrisi acısına karşı SentinelOps, bu olay yönetimi diliminde hazır SLA ve olay şablonları ile geçmiş çözümü tek tıkla uygulama akışı sunuyor; bireysel inceleme bağlantısı doğrulanana kadar 100 puan kanıtı tamamlanmış sayılmıyor.”*
+> *“G2 sayfa 9'da 5/11/2026 tarihli, doğrulanmış incelemede küçük ekiplerin kurulum ve öğrenme eğrisi acısı anlatılıyor; SentinelOps bu dar olay yönetimi diliminde hazır şablonlar, SLA varsayılanları ve geçmiş çözümü tek tıkla kullanma akışıyla başlangıç yükünü azaltıyor.”*
 
 ---
 
@@ -105,7 +109,7 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
 6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI de aynı commit'te yeşil. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
-7. **Kullanıcı yorumu kanıtı:** G2'deki tekil yorum sayfası açılamadı; kişiye/yoruma özgü permalink doğrulanmadı. 100 puan kriteri bu yüzden henüz kanıtlanmış değil.
+7. **Kullanıcı yorumu bağlantısı:** G2 sayfa 9 bağlantısında yorum, kullanıcının paylaştığı ekran görüntüsünde doğrulandı; sayfada yazar adı yerine “Current User” yazıyor ve yoruma özgü permalink görünmüyor. G2 otomatik erişime 403 döndürdüğünden sunumda sayfa 9 bağlantısını ve bu sınırlamayı birlikte belirtin.
 8. **Kalıcı veritabanı diski:** Render yapılandırması SQLite kullanıyor ve kalıcı disk tanımlamıyor; yeniden deploy/uyku sonrası demo kayıtlarının korunacağı garanti edilmez.
 
 ---
