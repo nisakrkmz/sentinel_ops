@@ -2,7 +2,7 @@
 
 > Bu dosya proje sahibinin geliştirme sürecine ilişkin notlarıdır; geçmiş oturum, model kullanımı ve maliyet iddiaları kod deposundan bağımsız olarak doğrulanamaz. G2 kullanıcı yorumu kanıtının ayrıntısı ve doğrulanmış test çıktısı için README'ye bakın.
 
-Bu doküman, **SentinelOps (Enterprise ServiceNow ITSM Klonu)** projesinin geliştirilmesi sırasında insan yazılımcı ile Yapay Zekâ Kodlama Ajanı (**Antigravity / Gemini 3.8 Flash**) arasındaki çift programlama (pair-programming) sürecini, karşılaşılan kritik teknik krizleri, uygulanan stratejileri ve çıkarılan dersleri açıklar.
+Bu doküman, **SentinelOps (Enterprise ServiceNow ITSM Klonu)** projesinin geliştirilmesi sırasında insan yazılımcı ile Antigravity içindeki **Gemini 3.8 Flash** ve ayrıca **GitHub Copilot** kullanılarak yürütülen çift programlama (pair-programming) sürecini, karşılaşılan teknik sorunları, uygulanan stratejileri ve çıkarılan dersleri açıklar. Copilot'un model/sürüm bilgisi kaydedilmemiştir.
 
 ---
 
@@ -56,6 +56,13 @@ Geliştirme sürecinde hiçbir şey "sihirli" bir şekilde tek komutta bitmedi. 
 
 ## 4. İnsan vs. Yapay Zekâ Rol Dağılımı
 
+### Kullanılan AI araçları ve maliyet kaydı
+
+- **Antigravity / Gemini 3.8 Flash:** Uygulama geliştirme ve Rails kodu üzerinde çift programlama için kullanıldı.
+- **GitHub Copilot:** Projenin sonraki aşamalarındaki kod/repo çalışmaları ve dokümantasyon için kullanıldı; kullanılan model/sürüm kaydedilmedi.
+- **Gerçek token veya API maliyeti:** Kullanım dökümü/billing kaydı tutulmadığından bilinmiyor. Tahmin ile gerçek maliyet ayrımı README'deki Faz 2 tablosundadır.
+- **Geliştirme süresi:** Yaklaşık 3 gün olarak kaydedildi; ayrıntılı zaman çizelgesi tutulmadı.
+
 ### İnsanın Katkısı:
 1. **Stratejik Yön:** IncidentFox konseptinden vazgeçip Fortune 500'lerin devasa harcama yaptığı ServiceNow pazarına odaklanma kararını verdi.
 2. **Ortam Hakikati (Ground Truth):** Windows pacman kilitlenmesinde ajanın sonsuz bekleme döngüsünü kırıp WSL'e yönlendirdi.
@@ -64,7 +71,7 @@ Geliştirme sürecinde hiçbir şey "sihirli" bir şekilde tek komutta bitmedi. 
 ### Ajanın Katkısı:
 1. **Hızlı Mimari İnşası:** Rails 8 migrasyonları, model callback'leri ve controller durum geçişlerini dakikalar içinde üretti.
 2. **Akıllı Benzerlik Algoritması:** Başlık, açıklama, kategori ve servis bazlı metin benzerlik eşleştiricisi geliştirildi; doğruluğu testlerle sınırlı örneklerde kontrol edildi.
-3. **Test Kapsamı:** `travel_to` içeren testler mevcut. 17 Ekim 2026 tarihli doğrulamada 22 test ve 109 assertion geçti; bu sonuç GitHub Actions çalışması değildir.
+3. **Test Kapsamı:** `travel_to` içeren testler mevcut. 19 Ekim 2026 tarihinde Ubuntu/WSL ortamında çalıştırılan testler **22 runs, 111 assertions, 0 failures, 0 errors, 0 skips** sonucu verdi. GitHub Actions CI bu testlerden ayrı olarak `b831627` commit'inde başarılı tamamlandı. Komut, kapsam ve diğer teslim bilgileri README'dedir.
 4. **Kurumsal Arayüz:** Dış bağımlılık olmadan saf CSS ile ServiceNow tarzı profesyonel bir Light Theme oluşturdu.
 
 ---

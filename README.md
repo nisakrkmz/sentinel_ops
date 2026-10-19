@@ -1,12 +1,16 @@
 # SentinelOps — Enterprise IT Service Management (ITSM) Platform
 
+<img src="docs/images/sentinelops-logo.svg" alt="SentinelOps logosu" width="64">
+
 [![CI](https://github.com/nisakrkmz/sentinel_ops/actions/workflows/ci.yml/badge.svg)](https://github.com/nisakrkmz/sentinel_ops/actions/workflows/ci.yml)
 ![Ruby Version](https://img.shields.io/badge/ruby-3.3.8-red.svg)
 ![Rails Version](https://img.shields.io/badge/rails-8.1.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 > **Canlı Uygulama URL:** [https://sentinel-ops-k0km.onrender.com](https://sentinel-ops-k0km.onrender.com) — Render deploy'u `23aa422` commit'inde başarılı; 17 Ekim 2026'da HTTP 200 ile kontrol edildi.
+>
 > **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)
+>
 > **İlham Kaynağı:** Bu proje, kurumsal BT dünyasının sektör standardı olan **ServiceNow (IT Service Management - Incident Management)** ürününün mimarisinden ve ITIL v4 operasyon standartlarından ilham alınarak geliştirilmiştir. Orijinal marka adı veya logosu uygulamada yer almaz.
 
 ---
@@ -44,7 +48,7 @@ Fortune'un 2026 listesi şirketleri **gelire** göre sıralar; değerleme ve Saa
 | :--- | :--- | :--- |
 | **Geliştirme süresi** | 2-3 gün | AI kullanıldığı doğrulandı; yaklaşık 3 gün. |
 | **Token / abonelik maliyeti** | Yaklaşık 15 milyon token ve model fiyatına göre $45-75 API maliyeti (kendi tahminim; abonelik sabit ücreti hariç) | Bu depoda kullanım/billing dökümü yok; 3,4 milyon token ve $14,50 iddiası doğrulanamadığı için gerçekleşen değer olarak sunulmuyor. Gerçek tutar bilinmiyor. |
-| **Ajan / model** | Model bağımsız | Antigravity (içindeki çeşitli modeller) ve GitHub Copilot kullanıldı. |
+| **Ajan / model** | Model bağımsız | Antigravity ile Gemini 3.8 Flash ve GitHub Copilot kullanıldı. Copilot model/sürüm bilgisi kaydedilmedi. |
 
 ---
 
@@ -52,16 +56,32 @@ Fortune'un 2026 listesi şirketleri **gelire** göre sıralar; değerleme ve Saa
 
 SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını uygular. Render'daki `23aa422` deploy'u başarılıdır ve uygulama URL'si HTTP 200 ile doğrulanmıştır.
 
-1. **Durum Akışı (State Workflow):**
-   $$\text{New (Yeni)} \xrightarrow{\text{start\_progress!}} \text{In Progress (İşlemde)} \xrightarrow{\text{put\_on\_hold!}} \text{On Hold (Beklemede)} \xrightarrow{\text{resolve!}} \text{Resolved (Çözüldü)}$$
-2. **Zaman Kuralı & Dinamik SLA Motoru:**
-   - **P1 - Critical:** 15 Dakika Hedef SLA
-   - **P2 - High:** 2 Saat Hedef SLA
-   - **P3 - Moderate:** 4 Saat Hedef SLA
-   - **P4 - Low:** 24 Saat Hedef SLA
-   - SLA, liste/detay sayfası veya aksiyon isteği geldiğinde kontrol edilir; ayrı bir arka plan zamanlayıcısı yoktur. Süre geçtiyse `sla_status` ihlal olarak işaretlenir, olayın iş akışı durumu ayrıca değişmez ve zaman çizelgesine kayıt eklenir.
-3. **Minitest + `travel_to` Testleri:**
-   22 test senaryosu Ubuntu/WSL ortamında 17 Ekim 2026 tarihinde çalıştırıldı: **22 runs, 111 assertions, 0 failures, 0 errors, 0 skips**. Ayrıca GitHub Actions CI, `23aa422` commit'inde başarılı tamamlandı.
+### 1. Durum Akışı (State Workflow)
+
+```text
+New (Yeni)
+   │  start_progress!
+   ▼
+In Progress (İşlemde)
+   │  put_on_hold!
+   ▼
+On Hold (Beklemede)
+   │  resolve!
+   ▼
+Resolved (Çözüldü)
+```
+
+### 2. Zaman Kuralı & Dinamik SLA Motoru
+
+- **P1 - Critical:** 15 Dakika Hedef SLA
+- **P2 - High:** 2 Saat Hedef SLA
+- **P3 - Moderate:** 4 Saat Hedef SLA
+- **P4 - Low:** 24 Saat Hedef SLA
+- SLA, liste/detay sayfası veya aksiyon isteği geldiğinde kontrol edilir; ayrı bir arka plan zamanlayıcısı yoktur. Süre geçtiyse `sla_status` ihlal olarak işaretlenir, olayın iş akışı durumu ayrıca değişmez ve zaman çizelgesine kayıt eklenir.
+
+### 3. Minitest + `travel_to` Testleri
+
+22 test senaryosu Ubuntu/WSL ortamında 19 Ekim 2026 tarihinde çalıştırıldı: **22 runs, 111 assertions, 0 failures, 0 errors, 0 skips**. Ayrıca GitHub Actions CI, `b831627` commit'inde başarılı tamamlandı.
 
 ---
 
@@ -85,7 +105,7 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
   - Aynı parmak izi için algoritmik skor: **98/100** (başarı oranı değildir).
 - **1 tıkla geçmiş çözümü uygula:** Detay sayfasında bulunan benzer olayın kök neden ve çözüm notları mevcut olaya aktarılır ve olay çözüldü durumuna alınır.
 
-### 3. Sunumda Tek Cümlelik Pas Formülü:
+### 3. Sunumda Tek Cümlelik Pas Formülü
 > *“G2 sayfa 9'da 5/11/2026 tarihli, doğrulanmış incelemede küçük ekiplerin kurulum ve öğrenme eğrisi acısı anlatılıyor; SentinelOps bu dar olay yönetimi diliminde hazır şablonlar, SLA varsayılanları ve geçmiş çözümü tek tıkla kullanma akışıyla başlangıç yükünü azaltıyor.”*
 
 ---
@@ -94,7 +114,7 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 
 - Neon/karanlık temadan tamamen arındırılmış, kurumsal ServiceNow web konsolu çizgisinde profesyonel aydınlık tema (`bg-slate-50`, `#f8fafc`).
 - Lacivert/kurumsal mavi tonları (`#0f172a`, `#2563eb`), kurumsal kartlar ve temiz listeleme tabloları.
-- Üst düzey yönetici metrik kartları (*Toplam Açık Bilet, Devam Edenler, SLA İhlalleri, Knowledge Match Oranı, Çözülen Biletler*).
+- Üst düzey yönetici metrik kartları (*Toplam Açık Bilet, İşlemde, SLA İhlalleri, Beklemede, Çözülen Biletler*).
 - Canlı demo simülatörü (*SAP ERP S/4HANA, Global VPN Gateway, Active Directory SSO, Payment Gateway*).
 
 ---
@@ -108,9 +128,10 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 3. **Rol Tabanlı Erişim Kontrolü (RBAC):** ServiceNow'daki yüzlerce yetki rolü (admin, itil, itil_admin, ess) yerine tüm bilet aksiyonları hızlı sunum ve değerlendirme amacıyla açık bırakılmıştır.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
-6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI de aynı commit'te yeşil. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
+6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI, README ve G2 ekran görüntüsü eklenen `b831627` commit'inde de başarılı tamamlandı. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
 7. **Kullanıcı yorumu bağlantısı:** G2 sayfa 9 bağlantısında yorum, kullanıcının paylaştığı ekran görüntüsünde doğrulandı; sayfada yazar adı yerine “Current User” yazıyor ve yoruma özgü permalink görünmüyor. G2 otomatik erişime 403 döndürdüğünden sunumda sayfa 9 bağlantısını ve bu sınırlamayı birlikte belirtin.
 8. **Kalıcı veritabanı diski:** Render yapılandırması SQLite kullanıyor ve kalıcı disk tanımlamıyor; yeniden deploy/uyku sonrası demo kayıtlarının korunacağı garanti edilmez.
+9. **Saat dilimi:** Sunucu UTC saatiyle çalışır; arayüzdeki zamanlar Türkiye saatinden (UTC+3) 3 saat geride görünebilir.
 
 ---
 
@@ -120,7 +141,7 @@ SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını u
 # Model, SLA travel_to ve Controller testlerinin tamamı:
 bin/rails test
 
-# Son doğrulama: 22 runs, 111 assertions, 0 failures, 0 errors, 0 skips (Ubuntu/WSL, 2026-10-17).
+# Son doğrulama: 22 runs, 111 assertions, 0 failures, 0 errors, 0 skips (Ubuntu/WSL, 2026-10-19).
 ```
 
 ---
@@ -139,3 +160,9 @@ bin/rails db:seed
 bin/rails server -b 0.0.0.0 -p 3000
 ```
 Tarayıcınızdan `http://localhost:3000` adresine giderek uygulamayı inceleyebilirsiniz.
+
+---
+
+## 🤖 Geliştirme Süreci
+
+Ajan ile çalışma notları, karşılaşılan krizler ve rol dağılımı için bkz. [AGENT.md](./AGENT.md).
