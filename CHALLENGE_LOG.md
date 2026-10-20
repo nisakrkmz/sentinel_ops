@@ -32,7 +32,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 
 - [x] Faz 1: actor, token, decision, handoff ve incident audit alanları; migrasyon ve model/controller testleri (WSL)
 - [x] Uygulama triage'ından anahtar kelime tabanlı karar mantığının kaldırılması; tipli karar sağlayıcısı ve şema doğrulaması
-- [ ] RAG ile kaynaklı çözüm önerisi; kanıt yetersizse abstain
+- [x] RAG ile kaynaklı çözüm önerisi; kanıt yetersizse abstain (gerçek provider/index ve canlı metrik beklemede)
 - [ ] Agent-first API (+ OpenAPI, agent-card) ve MCP sunucusu
 - [ ] Politika tabanlı HITL: otonom çözüm / onay bekleyen / devir
 - [ ] Canlı Agent Run Trace ve Onay Kuyruğu
@@ -46,7 +46,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 | 1 | Keşif ve baseline | [`81d2cb1`](https://github.com/nisakrkmz/sentinel_ops/commit/81d2cb15f2cb6abd0a4c180fbc0710c6f7f271a1) (audit/baseline docs) | Faz 0: 22 runs, 111 assertions, 0 failures | Canlı URL 503; demo doğrulanamadı | Audit, assumptions ve prompt copies hazır; canlı screenshot yok |
 | 2 | Actor modeli + denetim izi | [`81d2cb1`](https://github.com/nisakrkmz/sentinel_ops/commit/81d2cb15f2cb6abd0a4c180fbc0710c6f7f271a1) | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 35 runs, 163 assertions, 0 failures; 16 dosyada RuboCop temiz; Brakeman 0 warning | Mevcut geliştirme DB'sindeki 6 olay ve tüm timeline kayıtları actor'a bağlı; canlı deploy/demo beklemede | Faz 1 tamamlandı ve commit'lendi; deploy edilmedi |
 | 3 | Tipli triage altyapısı + eval baseline | [`4c21c13`](https://github.com/nisakrkmz/sentinel_ops/commit/4c21c13b46c7677b1035bb3a61bf821bd898c4b7) | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 46 runs, 202 assertions, 0 failures; `bundle exec rubocop` — 19 files, no offenses; Brakeman — 0 warnings; `ruby bin/eval_triage` — 40 örnek | Canlı sağlayıcı anahtarı ve deploy olmadığı için doğrulanmadı | Uygulama mantığı tamamlandı; gerçek model çağrısı ve deploy beklemede |
-| 4 | RAG (Incident Memory) + abstain | [link] | `[test komutu]` | [adım] | ☐ |
+| 4 | RAG (Incident Memory) + abstain | Commit sonrası eklenecek | `bundle exec rails test` — final sonuç aşağıda; RuboCop ve Brakeman temiz | Gerçek provider key/index ve production DB erişimi yok; canlı doğrulama beklemede | Uygulama, 25 senaryolu eval corpus ve `not_run` raporu hazır; sentetik KB açıkça etiketli |
 | 5 | Agent API + OpenAPI + MCP | [link] | `[test komutu]` | [adım] | ☐ |
 | 6 | Politika motoru + HITL + Run Trace | [link] | `[test komutu]` | [adım] | ☐ |
 | 7 | page-agent copilot | [link] | — | [adım] | ☐ |
@@ -58,8 +58,8 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 | Triage doğruluğu (priority) | 0.40 | Gerçek sağlayıcı çağrısı yapılmadı |
 | `needs_human` precision / recall | 1.00 / 0.40 | Gerçek sağlayıcı çağrısı yapılmadı |
 | Ortalama gecikme (ms) | 0.02 (yerel keyword baseline) | Gerçek sağlayıcı çağrısı yapılmadı |
-| RAG hit@3 | Faz 3 uygulanmadı | Faz 3 uygulanmadı |
-| Doğru abstain oranı (KB'de cevabı olmayan sorular) | Faz 3 uygulanmadı | Faz 3 uygulanmadı |
+| RAG hit@3 | Baseline tanımlı değil | `not_run` — gerçek embedding provider gerekli |
+| Doğru abstain oranı (KB'de cevabı olmayan sorular) | Baseline tanımlı değil | `not_run` — gerçek embedding, decision ve LLM provider gerekli |
 | Prompt injection örneklerinde politika ihlali | Gerçek model çağrısı olmadan ölçülmedi; güvenilmeyen girdi sınırı test edildi | Gerçek sağlayıcı çağrısı yapılmadı |
 
 **Kullanılan sağlayıcılar (dürüstçe):** Faz 2 doğrulamasında gerçek LLM/Jev sağlayıcı çağrısı yapılmadı. `DECISION_PROVIDER=jev` için resmî sözleşme doğrulanmadığından adapter açıkça `jev_contract_unverified` durumunu döndürüyor. Groq/NVIDIA/Hugging Face OpenAI-uyumlu adapter'ı eklendi; sağlayıcı, model ve anahtar ENV ile yapılandırılmalı. Bu nedenle model metriği raporlanmadı ve "Jev kullanıldı" iddiası yok.
@@ -78,7 +78,8 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 - Ödevde kastedilen geçen haftanın son commit'i doğrulanamadı; yalnızca mevcut repo HEAD'i kaydedildi.
 - Render paneli erişimi olmadığından deploy tetikleyicisi doğrulanamadı.
 - Faz 2'de typed triage şeması, HTTPS JSON-schema provider adapter'ı, karar kaydı, `triage_pending` fallback'i ve eval-only keyword baseline uygulandı. Sağlayıcı anahtarı olmadığı için gerçek model metriği ve `bin/live_smoke` çıktısı alınmadı; deploy/canlı demo yapılmadı.
-- RAG/Incident Memory, Agent API/MCP, HITL/Run Trace ve page-agent henüz uygulanmadı.
+- Faz 3 RAG/Incident Memory kodu, KB UI'si, `bin/index_knowledge` ve 25 soruluk eval altyapısı eklendi. Gerçek embedding/decision/LLM provider erişimi olmadığı için KB indeksleme, canlı eval metrikleri ve kaynaklı gerçek model cevabı henüz doğrulanmadı; Render deploy/canlı demo yapılmadı.
+- Agent API/MCP, HITL/Run Trace ve page-agent henüz uygulanmadı.
 
 ## Zaman
 
@@ -91,6 +92,7 @@ Süreleri **ölçülen** değerlerle doldur; tahmin yazma.
 | 2026-10-20 | Faz 0 düzeltme | 50 sn (10:32:22–10:33:12 +03) | Nisa dolduracak | Yeni commit yok | Bekleme süresinin aktif süreye eklenmesi düzeltildi |
 | 2026-10-20 | Faz 1 | 14 dk 28 sn (10:34:44–10:49:12 +03; bekleme yok) | Nisa dolduracak | `81d2cb1` | Actor/audit migrasyonu, hash'li token modeli, handoff/decision, attribution; 35 test geçti |
 | 2026-10-20 | Faz 2 | Ölçülemedi; başlangıç 11:02:36 +03 kaydedildi, aktif araç aralıklarının toplamı güvenilir biçimde çıkarılamadı | Nisa dolduracak | Commit sonrası eklenecek | Typed triage ve sağlayıcı altyapısı, toplam 40 örnekli baseline; 46 test geçti, gerçek model çağrısı/deploy yok |
+| 2026-10-20 | Faz 3 | Ölçülemedi; bu oturum için aktif araç aralıklarının güvenilir zaman kaydı yok | Nisa dolduracak | Commit sonrası eklenecek | 20 sentetik + 4 çözümlenmiş vaka KB, typed RAG akışı, kaynak doğrulama/abstain, KB arayüzü ve 25 soruluk eval; gerçek sağlayıcı ve deploy doğrulanmadı |
 
 **Toplam:** Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2 ölçülemedi · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
 

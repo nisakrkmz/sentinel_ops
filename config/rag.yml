@@ -1,0 +1,14 @@
+default: &default
+  retrieval_limit: 3
+  minimum_similarity: 0.55
+  minimum_relevance_probability: 0.70
+  maximum_answer_steps: 8
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

@@ -1,0 +1,35 @@
+<div style="margin-bottom: 1rem;">
+  <%= link_to "← Knowledge Base", knowledge_articles_path, style: "font-size: 0.85rem;" %>
+</div>
+
+<section class="enterprise-card">
+  <div class="enterprise-card-header">
+    <div>
+      <h1 class="card-title-text"><%= @article.title %></h1>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+        <%= @article.affected_service %> · <%= @article.category %>
+        <% if @article.configuration_item.present? %> · CI: <%= @article.configuration_item %><% end %>
+        <% if @article.version.present? %> · Version: <%= @article.version %><% end %>
+      </p>
+    </div>
+    <span class="status-badge"><%= @article.source.humanize %></span>
+  </div>
+  <div style="padding: 1.25rem;">
+    <% @chunks.each do |chunk| %>
+      <article id="<%= chunk.chunk_id %>" style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-light); scroll-margin-top: 1rem;">
+        <h2 style="font-size: 0.9rem; font-weight: 700;"><%= chunk.section.humanize %></h2>
+        <p style="margin-top: 0.35rem; white-space: pre-line;"><%= chunk.content %></p>
+        <code style="font-size: 0.72rem; color: var(--text-muted);"><%= chunk.chunk_id %></code>
+      </article>
+    <% end %>
+    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 1rem;">
+      <span data-kb-source="<%= @article.source %>">Source: <%= @article.source.humanize %></span>
+      <% if @article.source_incident.present? %>
+        · <%= link_to @article.source_incident.number, incident_path(@article.source_incident) %>
+      <% end %>
+      <% if @article.source == "synthetic_seed" %>
+        · Sentetik seed içerik
+      <% end %>
+    </div>
+  </div>
+</section>

@@ -69,7 +69,7 @@
             <span>Incident Management (Olay Yönetimi)</span>
           <% end %>
 
-          <%= link_to root_path(filter: "resolved"), class: "header-nav-link #{'active' if params[:filter] == 'resolved'}" do %>
+          <%= link_to knowledge_articles_path, class: "header-nav-link #{'active' if controller_name == 'knowledge_articles'}" do %>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             <span>Knowledge Base (Incident Memory)</span>
           <% end %>

@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/boot"
+require_relative "../config/environment"
+
+force = ARGV.delete("--force")
+abort "Usage: bin/index_knowledge [--force]" if ARGV.any?
+
+result = Rag::Indexer.call(force: !!force)
+puts "Indexed #{result.indexed} chunks using #{result.provider}/#{result.model}."
+puts "Embedding vectors remain server-side in the configured database."

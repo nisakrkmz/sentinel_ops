@@ -80,12 +80,17 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
 
     post resolve_incident_url(@incident), params: {
       root_cause_analysis: "SAP work process exhaustion due to batch schedule overlap",
-      resolution_notes: "SM50 work processes increased to 36 and jobs staggered"
+      resolution_notes: "SM50 work processes increased to 36 and jobs staggered",
+      verification: "RFC test passed and the queue returned to normal"
     }
 
     assert_redirected_to incident_url(@incident)
     assert_equal "resolved", @incident.reload.state
     assert_equal "SM50 work processes increased to 36 and jobs staggered", @incident.resolution_notes
+    candidate = @incident.kb_candidates.sole
+    assert_equal "pending", candidate.status
+    assert_equal "RFC test passed and the queue returned to normal", candidate.verification
+    assert_nil candidate.knowledge_article
   end
 
   test "should check sla and report status" do

@@ -21,6 +21,8 @@ bin/rails db:seed
 bin/rails server -b 0.0.0.0 -p 3000
 bin/rails test
 ruby bin/eval_triage  # keyword baseline; gerçek provider kıyası için EVAL_LIVE=1
+bin/index_knowledge  # onaylı KB parçalarını embedding modeliyle indeksle
+bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 ```
 
@@ -48,6 +50,14 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 | `DECISION_API_KEY` | Schema-constrained triage provider key'i | LLM JSON provider seçilirse |
 | `DECISION_MODEL` | Triage model adı | LLM JSON provider seçilirse |
 | `DECISION_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | LLM JSON provider seçilirse |
+| `LLM_PROVIDER` | `groq` \| `nvidia` \| `huggingface` | Kaynaklı resolution üretimi |
+| `LLM_API_KEY` | System 2 JSON chat anahtarı | Resolution sağlayıcısı seçilirse |
+| `LLM_MODEL` | System 2 model adı | Resolution sağlayıcısı seçilirse |
+| `LLM_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | Resolution sağlayıcısı seçilirse |
+| `EMBEDDING_PROVIDER` | `groq` \| `nvidia` \| `huggingface` | Semantik KB araması |
+| `EMBEDDING_API_KEY` | Embedding sağlayıcısı anahtarı | Embedding sağlayıcısı seçilirse |
+| `EMBEDDING_MODEL` | Çok dilli embedding model adı | Embedding sağlayıcısı seçilirse |
+| `EMBEDDING_BASE_URL` | HTTPS OpenAI-compatible embeddings endpoint'i | Embedding sağlayıcısı seçilirse |
 
 `DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
 
@@ -57,7 +67,9 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 - Gerçek stack, veri modeli, matcher ve deploy bulguları `docs/AUDIT.md` içinde; ölçüm sınırlamaları `docs/baseline/README.md` içinde kayıtlıdır.
 - Başlangıç keşfi sırasındaki test sonucu WSL Ubuntu / Ruby 3.3.8 üzerinde `22 runs, 111 assertions, 0 failures, 0 errors, 0 skips` oldu. Windows host Ruby 3.3.12 ortamında Rails gem'i kurulu olmadığından test başlatılamadı.
 - Faz 1: actor attribution, hash'li API token, decision/handoff audit tabloları ve incident metadata eklendi. Render'da `AGENT_TOKEN_PEPPER` tanımlı değil; token işlemleri deploy ortamında etkin sayılmamalıdır.
-- Faz 2'de provider entegrasyonu eklendiğinde ENV ve eval talimatlarını güncelle; Jev resmi sözleşmesi doğrulanmadan çalışıyor iddia etme.
+- Faz 2 triage provider'ı ve Faz 3 RAG adapter'ları generic HTTPS OpenAI-compatible endpoint bekler; gerçek provider/model uyumluluğunu secret ile canlı çağrı yapmadan varsayma.
+- Faz 3 KB veri modeli yapılandırılmış 4-chunk makaleler ve SQLite JSON embedding'leri kullanır. 4 seed resolved incident + 20 açıkça `synthetic_seed` olarak işaretli makale vardır. Embed sağlayıcısı yoksa arama/çözüm önerisi disabled/pending kalır.
+- `bin/index_knowledge` onaylı makaleleri mevcut embedding provider/model ile indeksler; `--force` tüm vektörleri yeniler. `bin/eval_rag` varsayılan olarak canlı model ölçümü yapmaz; gerçek çağrı için `EVAL_RAG_LIVE=1` gerekir.
 - Doğrudan kullanıcıya görünen `/healthz` beklenmemeli; mevcut sağlık endpoint'i `/up`'tır.
 
 ## Mimari kuralları

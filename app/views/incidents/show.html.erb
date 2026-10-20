@@ -132,9 +132,19 @@
           <span>Bileti Çözümle & Kapat (Resolve)</span>
         </button>
       <% else %>
-        <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
-          ✓ Bu bilet çözülmüştür ve kurumsal Knowledge Base hafızasına arşivlenmiştir.
-        </span>
+        <% if @kb_candidates.any? { |candidate| candidate.pending? } %>
+          <span class="badge badge-on-hold" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+            Çözüm kaydedildi; Knowledge Base'e eklenmesi insan onayı bekliyor.
+          </span>
+        <% elsif KnowledgeArticle.exists?(source_incident: @incident) %>
+          <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+            ✓ Çözülmüş vaka onaylı Incident Memory kaynağı olarak saklanıyor.
+          </span>
+        <% else %>
+          <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+            Bilet çözüldü; çözüm için Knowledge Base adayı bulunmuyor.
+          </span>
+        <% end %>
       <% end %>
     </div>
 
@@ -165,6 +175,10 @@
         <div class="form-group">
           <label class="form-label" style="color: #166534;">Uygulanan Çözüm Notları (Resolution Notes):</label>
           <textarea id="input_resolution_notes" name="resolution_notes" rows="3" class="form-textarea" placeholder="Örn: SM50 work process havuzu 36'ya yükseltildi ve cron kuyruğu güncellendi..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="color: #166534;">Doğrulama Sonucu (Verification):</label>
+          <input type="text" name="verification" class="form-input" placeholder="Örn: RFC testleri başarılı, işlem kuyruğu normale döndü..." required>
         </div>
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
           <button type="button" onclick="document.getElementById('resolve-form-box').style.display='none';" class="btn btn-secondary btn-sm">İptal</button>
@@ -224,6 +238,71 @@
     </p>
   </div>
 </section>
+
+<section class="enterprise-card" style="margin-top: 1.25rem;">
+  <div class="enterprise-card-header">
+    <span class="card-title-text">Incident Memory · Benzer geçmiş vakalar ve çözüm önerisi</span>
+    <%= button_to "Kaynaklı çözüm öner", suggest_resolution_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false } %>
+  </div>
+  <div style="padding: 1.25rem;">
+    <% if @relevance_decision&.completed? %>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">
+        Evidence grading: <%= @relevance_decision.provider %> / <%= @relevance_decision.model %> ·
+        Confidence <%= number_to_percentage(@relevance_decision.confidence.to_f * 100, precision: 0) %>
+      </p>
+    <% elsif @relevance_decision&.failed? %>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">Evidence grading failed: <%= @relevance_decision.error_code %></p>
+    <% end %>
+    <% if @resolution_decision&.failed? %>
+      <p>RAG şu anda kullanılamıyor (<%= @resolution_decision.error_code %>). Otomatik çözüm gösterilmiyor; insan incelemesi gerekli.</p>
+    <% elsif @resolution_decision&.output_json&.fetch("status", nil) == "insufficient_evidence" %>
+      <p>Knowledge Base'te yeterli kanıt yok. Bilet insan incelemesinde kalmalı; çözüm uydurulmadı.</p>
+    <% elsif @resolution_decision&.output_json&.fetch("status", nil) == "suggested" %>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">
+        Provider: <%= @resolution_decision.provider %> · Model: <%= @resolution_decision.model %> ·
+        Confidence: <%= number_to_percentage(@resolution_decision.confidence.to_f * 100, precision: 0) %>
+      </p>
+      <ol style="padding-left: 1.5rem; margin-top: 0.75rem;">
+        <% @resolution_decision.output_json.fetch("steps").each do |step| %>
+          <li style="margin-bottom: 0.6rem;">
+            <%= step.fetch("text") %>
+            <span style="font-size: 0.78rem;">
+              <% step.fetch("citations").each do |chunk_id| %>
+                <% chunk = @citation_chunks.find { |candidate| candidate.chunk_id == chunk_id } %>
+                <% if chunk %>
+                  <%= link_to "[#{chunk_id}]", knowledge_article_path(chunk.knowledge_article, anchor: chunk_id) %>
+                <% end %>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ol>
+      <p style="font-size: 0.8rem; color: var(--text-muted);">Öneri; hiçbir üretim aksiyonu uygulanmadı. Çözümü insan gözden geçirmelidir.</p>
+    <% else %>
+      <p>Çözüm önerisi henüz istenmedi. Sağlayıcılar veya vektör indeksi hazır değilse durum açıkça beklemede gösterilir.</p>
+    <% end %>
+  </div>
+</section>
+
+<% pending_candidates = @kb_candidates.select(&:pending?) %>
+<% if pending_candidates.any? %>
+  <section class="enterprise-card" style="margin-top: 1.25rem;">
+    <div class="enterprise-card-header"><span class="card-title-text">İnsan onayı · KB adayları</span></div>
+    <% pending_candidates.each do |candidate| %>
+      <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-light);">
+        <p><strong>Kök neden:</strong> <%= candidate.root_cause %></p>
+        <p style="margin-top: 0.4rem;"><strong>Doğrulama:</strong> <%= candidate.verification %></p>
+        <ul style="margin: 0.6rem 0 0.9rem 1.2rem;">
+          <% candidate.resolution_steps.each do |step| %><li><%= step %></li><% end %>
+        </ul>
+        <div style="display: flex; gap: 0.5rem;">
+          <%= button_to "Onayla ve KB'ye ekle", approve_kb_candidate_incident_path(@incident, candidate_id: candidate.id), method: :post, class: "btn btn-success btn-sm", data: { turbo: false } %>
+          <%= button_to "Reddet", reject_kb_candidate_incident_path(@incident, candidate_id: candidate.id), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } %>
+        </div>
+      </div>
+    <% end %>
+  </section>
+<% end %>
 
 <!-- =========================================================================
      İki kolonlu olay formu ve zaman çizelgesi

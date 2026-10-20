@@ -101,6 +101,7 @@ class Incident < ApplicationRecord
   belongs_to :opened_by_actor, class_name: "Actor", optional: true
   has_many :decisions, dependent: :destroy
   has_many :handoffs, dependent: :destroy
+  has_many :kb_candidates, dependent: :destroy
 
   # Validasyonlar
   validates :short_description, presence: true

@@ -97,8 +97,20 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 - Jev protokolü/payload resmi dokümanla doğrulanmadığından `DECISION_PROVIDER=jev` dürüstçe beklemede kalır; Jev kullanıldığı iddia edilmez.
 - Provider yoksa/başarısızsa kayıt yine oluşur, `triage_status=pending` kalır ve başarısız deneme hata koduyla `decisions` tablosuna audit edilir; sahte öncelik/cevap üretilmez.
 - Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
-- Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Incident Memory/RAG Faz 3'e kadar beklemededir.
+- Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Faz 3 Incident Memory/RAG akışı eklendi; gerçek embedding/LLM sağlayıcısı yapılandırılmadan indeksleme ve canlı öneri beklemededir.
 - `ruby bin/eval_triage` 40 etiketli TR/EN örnekte yalnızca baseline'ı çalıştırır. Gerçek model karşılaştırması açıkça `EVAL_LIVE=1 ruby bin/eval_triage` ve gerçek provider config gerektirir; anahtarsız eval model metriği uydurmaz. Güncel rapor: [`eval/RESULTS.md`](eval/RESULTS.md).
+
+## Incident Memory / RAG — Faz 3
+
+- KB, `KnowledgeArticle` ve kararlı `chunk_id` taşıyan `KnowledgeChunk` kayıtlarından oluşur. Her makale belirtiler, kök neden, çözüm adımları ve doğrulama olarak parçalanır; servis, CI ve sürüm metadatası parçalara eklenir.
+- Seed corpus: 4 resolved incident kaydı ve 20 ek **sentetik** makale. Sentetik girdiler `source: synthetic_seed` etiketi taşır; doğrulanmış production vakası gibi sunulmaz.
+- Embedding sağlayıcısı HTTPS OpenAI-compatible embeddings endpoint'idir. `EMBEDDING_PROVIDER`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` ve `EMBEDDING_BASE_URL` sunucu ortamında tanımlanır. Vektörler SQLite JSON alanında tutulur, retrieval cosine similarity ile yapılır; keyword fallback yoktur.
+- `bin/index_knowledge` onaylı KB parçalarını indeksler (`--force` mevcut vektörleri yeniden üretir). Model/provider değiştiğinde eski vektörler kullanılmaz; yeniden indeksleme gerekir.
+- Resolution isteğinde System 1 tarzı, JSON Schema kısıtlı `DECISION_PROVIDER` adapter'ı retrieved parçaları relevance açısından puanlar ve evidence gate uygular. Jev'in resmi request sözleşmesi doğrulanmadığı için Jev kullanıldığı iddia edilmez. System 2 üretimi `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` ile seçilir.
+- Her çözüm adımı geçerli bir `chunk_id` kaynağı vermelidir. Uygulama geçersiz/olmayan kaynakları çıkarır; güvenilir adım kalmazsa abstain edip insan incelemesi ister. Hiçbir production aksiyonu otomatik uygulanmaz. Başarılı relevance ve resolution kararları provider/model/prompt/hash/confidence/latency/sources ile `decisions` tablosuna kaydedilir.
+- İnsan çözüm formu doğrulama sonucunu da ister ve `kb_candidates` kuyruğuna kaydeder. Sadece insan onayından sonra makaleye dönüşür ve embedding yapılandırılmışsa indekslenir. Seed tekrar çalıştırıldığında sentetik ve onaylanmış KB kayıtları silinmez.
+- Knowledge Base sekmesi semantik arama ve tıklanabilir chunk kaynakları sunar. Incident detail'de “Kaynaklı çözüm öner” çağrısı retrieval + grading + grounded generation çalıştırır. Provider veya indeks yoksa hata/bekleme gösterilir; keyword/sahte cevap yoktur.
+- `eval/rag_golden.jsonl`: 25 soru (20 cevaplanabilir, 5 cevapsız). `ruby bin/eval_rag` canlı provider metriklerini çalıştırmadan dürüst `not_run` raporu yazar. Gerçek hit@1/hit@3, citation validity, doğru abstain ve gecikme ölçümü için `EVAL_RAG_LIVE=1 ruby bin/eval_rag` ve üç server-side provider config'i gerekir. Rapor: [`eval/RAG_RESULTS.md`](eval/RAG_RESULTS.md).
 
 ---
 
@@ -113,14 +125,10 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 
 - **Kriter değerlendirmesi:** Yorum, küçük ekiplerin ürünü kurup yapılandırma zorluğunu somutlaştırıyor. SentinelOps bu acıyı tam ServiceNow kurulumunu çözdüğü iddiasıyla değil; hazır olay şablonları, varsayılan SLA'lar ve geçmiş çözüme tek tıkla erişim sağlayan sınırlı olay yönetimi diliminde azaltmayı hedefliyor.
 
-### 2. SentinelOps çözümü: Smart Incident Knowledge Matcher
-- Bu küçük olay yönetimi dilimi için ilk kurulum gerektirmeyen SLA varsayılanları, hazır olay şablonları ve geçmiş çözülmüş olaylarla benzerlik eşleştirmesi sunulur. Amaç yeni operatörün doğru akışı hızla deneyebilmesidir; tam platform kurulumunu kolaylaştırdığı iddia edilmiyor.
-- **Benzerlik puanlaması:** Yeni açılan biletin servisi, hata başlığı ve açıklaması geçmişte çözülmüş vakalarla karşılaştırılır:
-  - Servis eşleşmesi: **+35 puan**
-  - Kategori eşleşmesi: **+10 puan**
-  - Jaccard metin benzerliği: **+55 puana kadar**
-  - Aynı parmak izi için algoritmik skor: **98/100** (başarı oranı değildir).
-- **1 tıkla geçmiş çözümü uygula:** Detay sayfasında bulunan benzer olayın kök neden ve çözüm notları mevcut olaya aktarılır ve olay çözüldü durumuna alınır.
+### 2. SentinelOps çözümü: Incident Memory
+- Önceki Smart Incident Knowledge Matcher, servis/kategori ve sözcük benzerliği puanlayan deterministik bir heuristikti; "AI" değildi ve Faz 2'de uygulama akışından kaldırıldı. Keyword baseline yalnızca eval karşılaştırması içindir.
+- Faz 3'te Incident Memory semantik embedding retrieval ve kaynaklı çözüm önerisi için yapılandırıldı. Sağlayıcı anahtarı/indeksi olmadan canlı semantik eşleşme veya model başarısı iddia edilmez.
+- Çözüm önerisi tek tıkla uygulanmaz; her adım kaynakla gösterilir ve insan incelemesi gerekir. İnsan tarafından çözülen vakalar, onaylanana kadar KB'ye eklenmez.
 
 ### 3. Sunumda Tek Cümlelik Pas Formülü
 > *“G2 sayfa 9'da 5/11/2026 tarihli, doğrulanmış incelemede küçük ekiplerin kurulum ve öğrenme eğrisi acısı anlatılıyor; SentinelOps bu dar olay yönetimi diliminde hazır şablonlar, SLA varsayılanları ve geçmiş çözümü tek tıkla kullanma akışıyla başlangıç yükünü azaltıyor.”*

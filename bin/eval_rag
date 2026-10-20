@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/boot"
+require_relative "../config/environment"
+require "json"
+require "date"
+
+golden_path = Rails.root.join("eval/rag_golden.jsonl")
+records = File.readlines(golden_path, chomp: true).reject(&:empty?).map { |line| JSON.parse(line) }
+answerable = records.count { |record| record.fetch("answerable") }
+unanswerable = records.count { |record| !record.fetch("answerable") }
+raise "Expected at least 25 RAG cases and 5 unanswerable cases" if records.length < 25 || unanswerable < 5
+
+report = {
+  "date" => Date.today.iso8601,
+  "dataset" => golden_path.relative_path_from(Rails.root).to_s,
+  "examples" => records.length,
+  "answerable_examples" => answerable,
+  "unanswerable_examples" => unanswerable,
+  "provider" => { "status" => "not_run", "note" => "Set EVAL_RAG_LIVE=1 and configure real embedding, decision, and LLM providers." }
+}
+
+if ENV["EVAL_RAG_LIVE"] == "1"
+  index_result = Rag::Indexer.call
+  embedding_provider = Rag::Providers::Factory.embedding
+  relevance_provider = Rag::Providers::Factory.relevance
+  resolution_provider = Rag::Providers::Factory.resolution
+  hit_at_1 = 0
+  hit_at_3 = 0
+  correct_abstains = 0
+  unanswerable_cases = 0
+  citation_count = 0
+  valid_citation_count = 0
+  durations_ms = []
+
+  records.each do |record|
+    retrieval = Rag::Retriever.call(record.fetch("query"), provider: embedding_provider)
+    ranked_slugs = retrieval.chunks.map { |entry| entry.fetch(:chunk).knowledge_article.slug }
+    if record.fetch("answerable")
+      expected_slug = record.fetch("expected_article_slug")
+      hit_at_1 += 1 if ranked_slugs.first == expected_slug
+      hit_at_3 += 1 if ranked_slugs.first(3).include?(expected_slug)
+    else
+      unanswerable_cases += 1
+    end
+
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    workflow_result = nil
+    ActiveRecord::Base.transaction do
+      incident = Incident.create!(
+        short_description: record.fetch("query").truncate(160),
+        description: record.fetch("query"),
+        service_affected: "unknown",
+        category: "Enterprise Software",
+        origin: :simulation
+      )
+      workflow_result = Rag::Workflow.call(
+        incident,
+        embedding_provider: embedding_provider,
+        relevance_provider: relevance_provider,
+        resolution_provider: resolution_provider,
+        retrieval: retrieval
+      )
+      raise ActiveRecord::Rollback
+    end
+    durations_ms << ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000)
+    citation_count += workflow_result.citation_count.to_i
+    valid_citation_count += workflow_result.valid_citation_count.to_i
+    correct_abstains += 1 if !record.fetch("answerable") && workflow_result.status == "insufficient_evidence"
+  end
+
+  report["provider"] = {
+    "status" => "completed",
+    "embedding_provider" => embedding_provider.provider,
+    "embedding_model" => embedding_provider.model,
+    "relevance_provider" => relevance_provider.provider,
+    "relevance_model" => relevance_provider.model,
+    "llm_provider" => resolution_provider.provider,
+    "llm_model" => resolution_provider.model,
+    "indexed_chunks" => index_result.indexed,
+    "metrics" => {
+      "hit_at_1" => (hit_at_1.to_f / answerable).round(4),
+      "hit_at_3" => (hit_at_3.to_f / answerable).round(4),
+      "citation_validity" => (citation_count.zero? ? nil : (valid_citation_count.to_f / citation_count).round(4)),
+      "citation_count" => citation_count,
+      "valid_citation_count" => valid_citation_count,
+      "correct_abstain_rate" => (unanswerable_cases.zero? ? nil : (correct_abstains.to_f / unanswerable_cases).round(4)),
+      "average_latency_ms" => (durations_ms.sum / durations_ms.length).round(2)
+    }
+  }
+end
+
+output_path = Rails.root.join("eval/RAG_RESULTS.md")
+File.write(output_path, <<~MARKDOWN)
+  # Incident Memory evaluation
+
+  - Date: #{report.fetch("date")}
+  - Dataset: `#{report.fetch("dataset")}` (#{report.fetch("examples")} cases; #{answerable} answerable, #{unanswerable} unanswerable)
+  - Provider status: #{report.dig("provider", "status")}
+
+  ```json
+  #{JSON.pretty_generate(report.fetch("provider"))}
+  ```
+
+  Live metrics are reported only after real embedding, relevance, and generation provider calls. `EVAL_RAG_LIVE=1` is an opt-in network operation.
+MARKDOWN
+
+puts "Wrote #{output_path} (#{records.length} cases; provider status: #{report.dig('provider', 'status')})"

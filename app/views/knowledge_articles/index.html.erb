@@ -1,0 +1,71 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Knowledge Base <span style="color: var(--text-muted); font-size: 0.9rem;">(Incident Memory)</span></h1>
+    <p class="page-subtitle">Onaylanmış geçmiş çözümler ve kaynak gösteren Incident Memory araması.</p>
+  </div>
+</div>
+
+<section class="enterprise-card" style="margin-bottom: 1.25rem;">
+  <div style="padding: 1.25rem;">
+    <%= form_with url: knowledge_articles_path, method: :get, local: true, style: "display: flex; gap: 0.75rem;" do %>
+      <input type="search" name="q" value="<%= @query %>" class="form-input" placeholder="Olayı veya etkilenen servisi tarif edin..." aria-label="Knowledge Base'de semantik arama">
+      <button type="submit" class="btn btn-primary">Incident Memory'de Ara</button>
+    <% end %>
+  </div>
+</section>
+
+<% if @search_error.present? %>
+  <div class="flash-message flash-alert">
+    Semantik arama kullanılamıyor (<%= @search_error %>). Embedding sağlayıcısı veya indeks yapılandırmasını kontrol edin; keyword tabanlı cevap üretilmedi.
+  </div>
+<% elsif @query.present? %>
+  <section class="enterprise-card">
+    <div class="enterprise-card-header">
+      <span class="card-title-text">Kaynaklı arama sonuçları</span>
+      <span class="status-badge"><%= @chunks.length %> parça</span>
+    </div>
+    <% if @chunks.any? %>
+      <% @chunks.each do |entry| %>
+        <% chunk = entry.fetch(:chunk) %>
+        <article style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light);">
+          <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: start;">
+            <div>
+              <%= link_to knowledge_article_path(chunk.knowledge_article, anchor: chunk.chunk_id), style: "font-weight: 700;" do %>
+                <%= chunk.knowledge_article.title %>
+              <% end %>
+              <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">
+                <%= chunk.knowledge_article.affected_service %> · <%= chunk.section.humanize %> · <%= chunk.knowledge_article.source.humanize %>
+              </div>
+            </div>
+            <span class="status-badge">Cosine <%= number_to_percentage(entry.fetch(:similarity) * 100, precision: 1) %></span>
+          </div>
+          <p style="margin-top: 0.7rem;"><%= chunk.content %></p>
+          <code style="font-size: 0.75rem; color: var(--text-muted);"><%= chunk.chunk_id %></code>
+        </article>
+      <% end %>
+    <% else %>
+      <p style="padding: 1.25rem;">Eşik üzerinde benzerlik sağlayan kaynak bulunamadı. İnsan incelemesi önerilir.</p>
+    <% end %>
+  </section>
+<% else %>
+  <section class="enterprise-card">
+    <div class="enterprise-card-header">
+      <span class="card-title-text">Onaylanmış bilgi makaleleri</span>
+      <span class="status-badge"><%= @articles.count %> kayıt</span>
+    </div>
+    <% @articles.each do |article| %>
+      <article style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-light);">
+        <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: start;">
+          <div>
+            <%= link_to article.title, knowledge_article_path(article), style: "font-weight: 700;" %>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;"><%= article.affected_service %> · <%= article.category %></div>
+          </div>
+          <span class="status-badge"><%= article.source.humanize %></span>
+        </div>
+        <% unless article.indexed_at? %>
+          <p style="margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-muted);">Semantik indeks beklemede; embedding sağlayıcısı yapılandırılmalı.</p>
+        <% end %>
+      </article>
+    <% end %>
+  </section>
+<% end %>

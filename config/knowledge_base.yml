@@ -1,0 +1,260 @@
+- slug: sap-rfc-work-process-exhaustion
+  title: SAP RFC work process exhaustion during batch processing
+  affected_service: SAP ERP
+  category: Enterprise Software
+  configuration_item: SAP S/4HANA application tier
+  version: S/4HANA
+  symptoms: RFC calls time out during overlapping finance batch jobs; dialog users report stalled transactions.
+  root_cause: Available dialog or background work processes are exhausted by concurrent long-running jobs.
+  resolution_steps:
+    - Review SM50 and SM66 for blocked or unusually long-running work processes.
+    - Coordinate with the SAP owner before changing work-process limits or rescheduling jobs.
+    - Stagger non-critical batch jobs and monitor queue depth after the change.
+  verification: Confirm RFC calls complete and representative finance transactions succeed; monitor work-process utilization.
+- slug: vpn-address-pool-exhaustion
+  title: Remote access VPN address pool exhausted
+  affected_service: Global VPN Gateway
+  category: Network Infrastructure
+  configuration_item: AnyConnect VPN gateway
+  version: AnyConnect
+  symptoms: Users cannot establish VPN tunnels and the gateway reports that no addresses are available.
+  root_cause: Concurrent active or stale VPN sessions consume the configured address pool.
+  resolution_steps:
+    - Check gateway pool utilization and active session counts.
+    - Validate idle-session cleanup and address-pool capacity with the network owner.
+    - Apply an approved capacity or session-policy change and monitor new connections.
+  verification: Confirm a test user receives an address and review gateway utilization for renewed exhaustion.
+- slug: active-directory-kerberos-clock-skew
+  title: Kerberos authentication failures caused by clock skew
+  affected_service: Active Directory SSO
+  category: Identity & Security
+  configuration_item: Domain controllers
+  version: Windows Server
+  symptoms: Kerberos tickets are rejected and users receive authentication or clock-skew errors.
+  root_cause: Domain controller time sources are inconsistent beyond the authentication tolerance.
+  resolution_steps:
+    - Compare time synchronization status across domain controllers and the authoritative time source.
+    - Have the identity team restore the approved time hierarchy before forcing synchronization.
+    - Check time-service events for recurrence.
+  verification: Confirm controller clocks converge and affected users can authenticate with fresh tickets.
+- slug: payment-database-connection-pool
+  title: Payment service database connection pool saturation
+  affected_service: Payment Gateway
+  category: Database
+  configuration_item: Payment database connection pool
+  version: PostgreSQL
+  symptoms: Checkout requests time out while the payment service reports all database connections in use.
+  root_cause: Connection demand or leaked connections exceeds the configured pool and database capacity.
+  resolution_steps:
+    - Compare active, idle, and waiting connections with the application pool limit.
+    - Identify connection leaks or a traffic increase before changing pool sizes.
+    - Apply an approved pool or workload change and monitor database saturation.
+  verification: Confirm checkout health checks pass and connection counts remain below the agreed capacity.
+- slug: exchange-mail-queue-backlog
+  title: Exchange transport queue backlog
+  affected_service: Email & Collaboration
+  category: Email & Collaboration
+  configuration_item: Exchange transport service
+  version: Exchange
+  symptoms: Internal or outbound mail is delayed and transport queues continue to grow.
+  root_cause: A downstream connector, transport service, or recipient domain is not accepting queued messages.
+  resolution_steps:
+    - Inspect queue state and the last error for affected destinations.
+    - Verify connector reachability and service health with the messaging owner.
+    - Resume only approved queues after the downstream cause is addressed.
+  verification: Confirm queue depth decreases and send a monitored test message to an affected destination.
+- slug: citrix-session-capacity
+  title: Citrix session host capacity reached
+  affected_service: Cloud Infrastructure
+  category: End User Computing
+  configuration_item: Citrix virtual apps and desktops
+  version: Citrix Virtual Apps
+  symptoms: New virtual desktop sessions fail or remain queued while existing sessions are slow.
+  root_cause: Available session hosts or resource capacity are insufficient for concurrent demand.
+  resolution_steps:
+    - Review broker registration, host load, and active session distribution.
+    - Coordinate capacity or drain actions with the EUC owner.
+    - Restore only healthy hosts to the delivery group.
+  verification: Confirm new test sessions launch and host load remains within operating limits.
+- slug: database-deadlock
+  title: Application database deadlock retries
+  affected_service: Payment Gateway
+  category: Database
+  configuration_item: Application database
+  version: PostgreSQL
+  symptoms: Requests intermittently fail with deadlock errors and transaction retries increase.
+  root_cause: Concurrent transactions acquire shared rows or tables in conflicting orders.
+  resolution_steps:
+    - Correlate deadlock logs with the affected transaction types and timestamps.
+    - Review transaction lock ordering and retry behavior with the application owner.
+    - Deploy an approved transaction change and monitor deadlock frequency.
+  verification: Confirm representative transactions complete and database deadlock alerts subside.
+- slug: kubernetes-pod-crash-loop
+  title: Kubernetes workload enters CrashLoopBackOff
+  affected_service: Cloud Infrastructure
+  category: Cloud Infrastructure
+  configuration_item: Kubernetes workload
+  version: Kubernetes
+  symptoms: Pods repeatedly restart and the workload does not reach its ready replica count.
+  root_cause: Startup configuration, dependency availability, or resource limits prevent the container from becoming ready.
+  resolution_steps:
+    - Inspect pod events, previous container logs, probes, and recent deployment changes.
+    - Validate the suspected configuration or dependency with the service owner.
+    - Roll back or apply an approved manifest correction.
+  verification: Confirm pods remain ready and restart counts stabilize after deployment.
+- slug: linux-filesystem-capacity
+  title: Linux filesystem reaches capacity
+  affected_service: Cloud Infrastructure
+  category: Storage
+  configuration_item: Linux server filesystem
+  version: Linux
+  symptoms: Writes fail or services become unhealthy while filesystem usage approaches full.
+  root_cause: Logs, temporary data, or application files consume available filesystem capacity.
+  resolution_steps:
+    - Identify the full mount and largest approved-to-inspect directories.
+    - Follow retention policy and service-owner approval before removing or rotating data.
+    - Expand capacity through the approved change process if cleanup is insufficient.
+  verification: Confirm the filesystem has operating headroom and the affected service writes successfully.
+- slug: tls-certificate-expiry
+  title: TLS certificate expired on a service endpoint
+  affected_service: Cloud Infrastructure
+  category: Cloud Infrastructure
+  configuration_item: TLS certificate and endpoint
+  version: X.509
+  symptoms: Clients reject an endpoint because its certificate is expired or the chain is incomplete.
+  root_cause: Certificate renewal or deployment did not complete before expiration.
+  resolution_steps:
+    - Verify the certificate presented by the affected endpoint and its trust chain.
+    - Request or retrieve the approved replacement certificate from the certificate owner.
+    - Deploy through the standard change process and check all endpoint instances.
+  verification: Confirm clients validate the renewed chain and certificate monitoring reports a valid expiry window.
+- slug: dns-resolution-failure
+  title: Internal DNS records fail to resolve
+  affected_service: Active Directory SSO
+  category: Network Infrastructure
+  configuration_item: Internal DNS resolvers
+  version: DNS
+  symptoms: Multiple clients cannot resolve an internal service name or receive inconsistent answers.
+  root_cause: Resolver reachability, stale records, or a record replication issue affects name resolution.
+  resolution_steps:
+    - Compare authoritative and recursive answers from affected network segments.
+    - Check resolver health and record replication with the DNS owner.
+    - Correct or refresh records only after confirming the authoritative source.
+  verification: Confirm affected clients resolve the expected record through their configured resolvers.
+- slug: sso-redirect-loop
+  title: SSO sign-in repeatedly redirects without completing
+  affected_service: Active Directory SSO
+  category: Identity & Security
+  configuration_item: SSO identity provider and relying party
+  version: SAML or OIDC
+  symptoms: Users return to the sign-in page after authentication and cannot access the application.
+  root_cause: Redirect URI, session cookie, or identity-provider configuration is inconsistent.
+  resolution_steps:
+    - Review identity-provider sign-in events and the relying-party callback configuration.
+    - Compare redirect URI and cookie policy with the last approved application change.
+    - Correct the mismatched setting through the identity and application owners.
+  verification: Confirm a new private session completes sign-in and the application records a valid identity.
+- slug: storage-volume-read-only
+  title: Storage volume unexpectedly becomes read-only
+  affected_service: Cloud Infrastructure
+  category: Storage
+  configuration_item: Server storage volume
+  version: Linux
+  symptoms: Applications can read data but writes fail because the mounted volume is read-only.
+  root_cause: Filesystem or storage errors caused the operating system to protect the volume.
+  resolution_steps:
+    - Check kernel and storage events before attempting a remount.
+    - Validate volume health and backups with the storage owner.
+    - Follow the recovery runbook and obtain approval before write operations.
+  verification: Confirm the filesystem is healthy, writable through an approved test, and storage alerts are clear.
+- slug: load-balancer-unhealthy-backends
+  title: Load balancer marks all service backends unhealthy
+  affected_service: Cloud Infrastructure
+  category: Cloud Infrastructure
+  configuration_item: Application load balancer
+  version: Load balancer
+  symptoms: Requests fail at the load balancer and all configured backends fail health checks.
+  root_cause: Health-check path, backend reachability, or service readiness is misconfigured or unavailable.
+  resolution_steps:
+    - Compare health-check settings with the service's documented readiness endpoint.
+    - Test backend reachability from the load-balancer network.
+    - Restore backend health or apply an approved health-check correction.
+  verification: Confirm healthy backend count recovers and a monitored request succeeds through the balancer.
+- slug: endpoint-disk-pressure
+  title: Managed endpoint disk pressure
+  affected_service: Cloud Infrastructure
+  category: End User Computing
+  configuration_item: Managed workstation
+  version: Windows 11
+  symptoms: Endpoint updates or applications fail because the system volume has little free space.
+  root_cause: Approved applications, temporary files, or cached update data consume endpoint storage.
+  resolution_steps:
+    - Collect endpoint storage diagnostics through the approved management tool.
+    - Apply organization retention and cleanup policy; do not remove user data without approval.
+    - Escalate for storage replacement if the device remains below the supported threshold.
+  verification: Confirm system volume headroom and successful completion of the previously failing operation.
+- slug: firewall-policy-deny
+  title: Firewall policy unexpectedly denies application traffic
+  affected_service: Global VPN Gateway
+  category: Network Infrastructure
+  configuration_item: Network firewall policy
+  version: Firewall
+  symptoms: A service connection times out after a network change and firewall logs show denied traffic.
+  root_cause: The required source, destination, or port is absent from the approved policy.
+  resolution_steps:
+    - Capture the connection tuple and correlate it with firewall deny logs.
+    - Verify the required flow with the application and security owners.
+    - Submit and validate a least-privilege policy change through change control.
+  verification: Confirm the specific approved flow succeeds and no broader unintended access was introduced.
+- slug: backup-job-failure
+  title: Scheduled backup job fails to complete
+  affected_service: Cloud Infrastructure
+  category: Storage
+  configuration_item: Backup scheduler and target
+  version: Backup platform
+  symptoms: The latest scheduled backup is failed or missing from the expected recovery point.
+  root_cause: Target capacity, credentials, scheduling, or source connectivity prevented job completion.
+  resolution_steps:
+    - Review job logs and distinguish source, credential, schedule, and target errors.
+    - Validate target health and credential status with the backup owner.
+    - Rerun only the approved job after correcting the verified cause.
+  verification: Confirm a successful recovery point and verify the expected retention policy.
+- slug: api-rate-limit
+  title: Application API requests throttled by rate limit
+  affected_service: Payment Gateway
+  category: Cloud Infrastructure
+  configuration_item: API gateway
+  version: API gateway
+  symptoms: Clients receive HTTP 429 responses and retry queues grow during a traffic increase.
+  root_cause: Request volume exceeds the configured quota or clients retry without backoff.
+  resolution_steps:
+    - Compare request rates by client and route with the configured quota.
+    - Check retry behavior and identify abnormal or duplicate traffic.
+    - Apply an approved quota or client backoff change with the API owner.
+  verification: Confirm 429 rates and retry queues return to expected levels without breaching capacity.
+- slug: print-service-queue-stalled
+  title: Enterprise print queue stops processing
+  affected_service: Cloud Infrastructure
+  category: End User Computing
+  configuration_item: Print server and queue
+  version: Windows Server
+  symptoms: Submitted print jobs remain queued and users cannot print to a shared device.
+  root_cause: A stalled spooler, invalid driver, or unavailable printer blocks queue processing.
+  resolution_steps:
+    - Inspect queue and spooler events and identify whether one job or the destination is blocking progress.
+    - Confirm printer and driver health with the endpoint support owner.
+    - Clear or restart only the affected queue using the approved support procedure.
+  verification: Confirm a test job prints and queued jobs begin processing normally.
+- slug: monitoring-alert-delivery
+  title: Monitoring alerts are not reaching the on-call channel
+  affected_service: Cloud Infrastructure
+  category: Cloud Infrastructure
+  configuration_item: Monitoring notification integration
+  version: Monitoring platform
+  symptoms: Alerts appear in monitoring history but no notification reaches the configured on-call destination.
+  root_cause: Notification routing, integration credentials, or destination availability is broken.
+  resolution_steps:
+    - Compare alert history with notification delivery logs for a known test event.
+    - Validate routing configuration and integration health with the monitoring owner.
+    - Restore the approved destination or credential through the standard change process.
+  verification: Trigger an approved test alert and confirm it appears in the on-call destination with expected metadata.

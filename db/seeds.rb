@@ -1,4 +1,5 @@
 # SentinelOps - ServiceNow ITSM Kurumsal Tohum Verileri (Knowledge Base / Incident Memory)
+require "yaml"
 
 TimelineEvent.delete_all
 Handoff.delete_all
@@ -133,3 +134,29 @@ in_prog_ticket = Incident.create!(
 )
 
 puts "Başarıyla tamamlandı! #{Incident.count} ITSM bileti ve #{TimelineEvent.count} zaman çizelgesi kaydı oluşturuldu."
+
+Incident.resolved_tickets.find_each do |incident|
+  article = KnowledgeArticle.find_or_initialize_by(slug: "resolved-#{incident.number.downcase}")
+  article.update!(
+    title: incident.short_description,
+    affected_service: incident.service_affected,
+    category: incident.category,
+    source: "resolved_incident",
+    configuration_item: incident.service_affected,
+    symptoms: incident.description,
+    root_cause: incident.root_cause_analysis,
+    resolution_steps: (incident.resolution_notes || incident.resolution_steps).to_s.lines.map(&:strip).reject(&:blank?),
+    verification: "Seeded resolved incident reached Resolved state; independent technical verification details were not recorded.",
+    approved: true,
+    source_incident: incident
+  )
+  article.rebuild_chunks!
+end
+
+YAML.safe_load_file(Rails.root.join("config/knowledge_base.yml")).each do |entry|
+  article = KnowledgeArticle.find_or_initialize_by(slug: entry.fetch("slug"))
+  article.update!(**entry.symbolize_keys, source: "synthetic_seed", approved: true)
+  article.rebuild_chunks!
+end
+
+puts "Incident Memory: #{KnowledgeArticle.count} approved articles, #{KnowledgeChunk.count} structured chunks (synthetic seeds are labeled)."

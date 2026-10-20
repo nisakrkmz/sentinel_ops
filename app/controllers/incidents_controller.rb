@@ -1,6 +1,6 @@
 class IncidentsController < ApplicationController
   before_action :set_current_actor
-  before_action :set_incident, only: [ :show, :start_progress, :investigate, :put_on_hold, :resolve, :check_sla ]
+  before_action :set_incident, only: [ :show, :start_progress, :investigate, :put_on_hold, :resolve, :check_sla, :suggest_resolution, :approve_kb_candidate, :reject_kb_candidate ]
 
   def index
     # Aktif biletlerin SLA sürelerini dinamik kontrol et
@@ -61,6 +61,10 @@ class IncidentsController < ApplicationController
     @timeline_events = @incident.timeline_events.order(created_at: :desc)
 
     @triage_attempt = @incident.decisions.triage.order(created_at: :desc).first
+    @resolution_decision = @incident.decisions.resolution.order(created_at: :desc).first
+    @relevance_decision = @incident.decisions.verify.order(created_at: :desc).first
+    @citation_chunks = KnowledgeChunk.includes(:knowledge_article).where(chunk_id: @resolution_decision&.sources || [])
+    @kb_candidates = @incident.kb_candidates.order(created_at: :desc)
   end
 
   def new
@@ -111,14 +115,53 @@ class IncidentsController < ApplicationController
 
   # Durum Geçişi 3: Çözümle ve Kapat (-> Resolved)
   def resolve
-    notes = params[:resolution_notes].presence || params[:resolution_steps].presence || "Servis yapılandırması düzeltilerek erişim sağlandı."
-    rca = params[:root_cause_analysis].presence || "Sistem kaynak sınırı aşıldı ve otomatik kurtarma mekanizması devreye alındı."
-
-    if @incident.resolve!(resolution_notes: notes, root_cause: rca)
-      redirect_to @incident, notice: "ITSM Bileti (#{@incident.number}) başarıyla çözüldü (Resolved) ve kurumsal hafızaya (Knowledge Base) eklendi."
-    else
-      redirect_to @incident, alert: "Bilet çözümlenirken bir hata oluştu."
+    notes = params[:resolution_notes].presence || params[:resolution_steps].presence
+    rca = params[:root_cause_analysis].presence
+    verification = params[:verification].presence
+    unless notes && rca && verification
+      return redirect_to @incident, alert: "Kök neden, çözüm notları ve doğrulama sonucu gereklidir."
     end
+
+    Incident.transaction do
+      @incident.resolve!(resolution_notes: notes, root_cause: rca)
+      @incident.kb_candidates.create!(
+        submitted_by: Current.actor,
+        root_cause: rca,
+        resolution_steps: notes.lines.map(&:strip).reject(&:blank?),
+        verification: verification
+      )
+    end
+    redirect_to @incident, notice: "ITSM Bileti (#{@incident.number}) çözüldü. Çözüm, Knowledge Base'e eklenmeden önce insan onay kuyruğuna alındı."
+  rescue ActiveRecord::RecordInvalid
+    redirect_to @incident, alert: "Bilet çözümü veya Knowledge Base adayı kaydedilemedi."
+  end
+
+  def suggest_resolution
+    result = Rag::Workflow.call(@incident)
+    if result.suggested?
+      redirect_to @incident, notice: "Kaynaklı çözüm önerisi hazırlandı; aksiyonlar uygulanmadı."
+    elsif result.status == "insufficient_evidence"
+      redirect_to @incident, alert: "Knowledge Base'te yeterli kanıt yok. İnsan incelemesi gerekli."
+    else
+      redirect_to @incident, alert: "Incident Memory kullanılamıyor (#{result.error_code}). Otomatik çözüm üretilmedi."
+    end
+  end
+
+  def approve_kb_candidate
+    candidate = @incident.kb_candidates.pending_review.find(params[:candidate_id])
+    candidate.approve!(Current.actor)
+    indexed = Rag::Indexer.call(article: candidate.knowledge_article)
+    redirect_to @incident, notice: "Knowledge Base adayı onaylandı ve #{indexed.indexed} parça indekslendi."
+  rescue Rag::ProviderError => error
+    redirect_to @incident, alert: "Aday onaylandı, ancak embedding indeksi güncellenemedi (#{error.code}). Sağlayıcıyı yapılandırıp indeksleme komutunu çalıştırın."
+  rescue ActiveRecord::RecordInvalid
+    redirect_to @incident, alert: "Knowledge Base adayı onaylanamadı."
+  end
+
+  def reject_kb_candidate
+    candidate = @incident.kb_candidates.pending_review.find(params[:candidate_id])
+    candidate.reject!(Current.actor)
+    redirect_to @incident, notice: "Knowledge Base adayı reddedildi ve Incident Memory'ye eklenmedi."
   end
 
   # Zaman Kuralı: SLA Kontrolü Manuel Tetikleme (Test ve Canlı Sunum)

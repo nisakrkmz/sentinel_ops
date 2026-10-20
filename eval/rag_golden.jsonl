@@ -1,0 +1,25 @@
+{"id":"rag-01","query":"SAP RFC calls time out when month-end finance batch jobs overlap","answerable":true,"expected_article_slug":"sap-rfc-work-process-exhaustion"}
+{"id":"rag-02","query":"VPN users get no address available in pool and cannot create a tunnel","answerable":true,"expected_article_slug":"vpn-address-pool-exhaustion"}
+{"id":"rag-03","query":"Kerberos rejects users because domain controllers have clock skew","answerable":true,"expected_article_slug":"active-directory-kerberos-clock-skew"}
+{"id":"rag-04","query":"Payment checkout 504s; all database pool connections are busy","answerable":true,"expected_article_slug":"payment-database-connection-pool"}
+{"id":"rag-05","query":"Exchange transport queues grow and outbound email is delayed","answerable":true,"expected_article_slug":"exchange-mail-queue-backlog"}
+{"id":"rag-06","query":"Citrix sessions remain queued because no session hosts are available","answerable":true,"expected_article_slug":"citrix-session-capacity"}
+{"id":"rag-07","query":"Postgres deadlock errors appear during concurrent application transactions","answerable":true,"expected_article_slug":"database-deadlock"}
+{"id":"rag-08","query":"Kubernetes pods repeatedly restart and show CrashLoopBackOff","answerable":true,"expected_article_slug":"kubernetes-pod-crash-loop"}
+{"id":"rag-09","query":"Linux says no space left on device and the filesystem is full","answerable":true,"expected_article_slug":"linux-filesystem-capacity"}
+{"id":"rag-10","query":"Clients reject our endpoint because the TLS certificate expired","answerable":true,"expected_article_slug":"tls-certificate-expiry"}
+{"id":"rag-11","query":"Internal DNS names return inconsistent answers from office resolvers","answerable":true,"expected_article_slug":"dns-resolution-failure"}
+{"id":"rag-12","query":"Users complete sign in but SSO redirects them back to login repeatedly","answerable":true,"expected_article_slug":"sso-redirect-loop"}
+{"id":"rag-13","query":"A mounted Linux storage volume switched to read only","answerable":true,"expected_article_slug":"storage-volume-read-only"}
+{"id":"rag-14","query":"The load balancer has marked every backend unhealthy","answerable":true,"expected_article_slug":"load-balancer-unhealthy-backends"}
+{"id":"rag-15","query":"Windows endpoint updates fail because C drive is nearly full","answerable":true,"expected_article_slug":"endpoint-disk-pressure"}
+{"id":"rag-16","query":"Firewall logs deny the application flow after a network change","answerable":true,"expected_article_slug":"firewall-policy-deny"}
+{"id":"rag-17","query":"The nightly backup job failed and no recovery point was created","answerable":true,"expected_article_slug":"backup-job-failure"}
+{"id":"rag-18","query":"API consumers see HTTP 429 and retries are building up","answerable":true,"expected_article_slug":"api-rate-limit"}
+{"id":"rag-19","query":"Shared printer jobs are stuck in the print server queue","answerable":true,"expected_article_slug":"print-service-queue-stalled"}
+{"id":"rag-20","query":"Monitoring alerts show in history but never reach the on-call channel","answerable":true,"expected_article_slug":"monitoring-alert-delivery"}
+{"id":"rag-21","query":"How do I configure Oracle RAC SCAN listener failover in our production cluster?","answerable":false,"expected_article_slug":null}
+{"id":"rag-22","query":"Our quantum GPU cluster reports a cryogenic sensor fault at the orbital data center","answerable":false,"expected_article_slug":null}
+{"id":"rag-23","query":"Slack legal hold export is missing archived direct messages","answerable":false,"expected_article_slug":null}
+{"id":"rag-24","query":"iOS app push notifications arrive several hours late for mobile users","answerable":false,"expected_article_slug":null}
+{"id":"rag-25","query":"Please provision a new SAP production license and add three administrator accounts","answerable":false,"expected_article_slug":null}
