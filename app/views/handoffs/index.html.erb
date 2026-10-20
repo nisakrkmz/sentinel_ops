@@ -35,7 +35,7 @@
           </ol>
         </div>
       <% end %>
-      <%= form_with url: accept_handoff_path(handoff), method: :post do |form| %>
+      <%= form_with url: accept_handoff_path(handoff), method: :post, data: { agent_confirm: "Bu handoff onaylanıp incident çözülsün mü?" } do |form| %>
         <div class="form-group">
           <%= form.label :resolution_notes, "Çözüm notları", class: "form-label" %>
           <%= form.text_area :resolution_notes, value: output.fetch("steps", []).map { |step| step["text"] }.join("\n"), rows: 3, class: "form-textarea", required: true %>
@@ -57,7 +57,7 @@
           <%= form.button "Düzelt ve Çöz", name: "review_action", value: "correct", class: "btn btn-primary btn-sm" %>
         </div>
       <% end %>
-      <%= form_with url: reject_handoff_path(handoff), method: :post, style: "margin-top: 0.75rem;" do |form| %>
+      <%= form_with url: reject_handoff_path(handoff), method: :post, style: "margin-top: 0.75rem;", data: { agent_confirm: "Bu handoff reddedilsin mi?" } do |form| %>
         <%= form.text_field :feedback, placeholder: "Red nedeni", class: "form-input", aria: { label: "Red nedeni" } %>
         <%= form.submit "Öneriyi Reddet", class: "btn btn-secondary btn-sm", style: "margin-top: 0.5rem;" %>
       <% end %>

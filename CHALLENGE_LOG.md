@@ -36,7 +36,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 - [x] Agent-first REST API (+ OpenAPI, agent-card), MCP sunucusu ve SSE olay replay'i (Render'da live doğrulama beklemede)
 - [x] Politika tabanlı HITL: config eşikli otonom çözüm / onay bekleyen / devir (gerçek sağlayıcıyla çalıştırma beklemede)
 - [x] Agent Run Trace ve Onay Kuyruğu (lokal testlerle doğrulandı; canlı deploy beklemede)
-- [ ] page-agent araştırması ve sunucu proxy'li, maskelemeli entegrasyon
+- [x] page-agent araştırması ve sunucu proxy'li, maskelemeli UI copilot (provider erişimi/canlı doğrulama beklemede)
 - [x] Eval: 40 örneklik kelime tabanlı baseline raporu; gerçek model karşılaştırması sağlayıcı erişimi bekliyor
 
 ## Yapılanlar ve kanıt
@@ -49,7 +49,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 | 4 | RAG (Incident Memory) + abstain | [`bfbac5d`](https://github.com/nisakrkmz/sentinel_ops/commit/bfbac5d3352bc53d98a28f5d88804a2f16047f9a) | `bundle exec rails test` — 67 runs, 310 assertions, 0 failures; RuboCop — 21 files, no offenses; `bundle exec brakeman -q` — 0 warnings; `./bin/eval_rag` — 25 cases, `not_run`; temporary migrate/seed rerun — 24 articles, 96 chunks, 6 incidents both runs | Gerçek provider key/index ve production DB erişimi yok; canlı doğrulama beklemede | Uygulama, 25 senaryolu eval corpus ve `not_run` raporu hazır; sentetik KB açıkça etiketli |
 | 5 | Agent REST API + OpenAPI + agent-card + MCP + SSE | [`989682d`](https://github.com/nisakrkmz/sentinel_ops/commit/989682d0adbb70430d7a877612772848885e87cf) | `bundle exec rails test` — 85 runs, 411 assertions, 0 failures; `bundle exec rubocop app/controllers/api/v1 app/controllers/mcp_controller.rb test/controllers/api/v1 test/controllers/mcp_controller_test.rb` — 8 files, no offenses; `bundle exec brakeman -q` — 0 warnings | Local API/MCP contract tests pass; Render token pepper/provider ENV ve deploy doğrulanmadı | Scope'lu REST ve MCP, idempotency, cursor paging, SSE event batch, kaynak doğrulama ve makine okunur hatalar |
 | 6 | HITL policy, workflow orkestrasyonu, simülasyon actor attribution, Onay Kuyruğu, feedback denetimi ve Agent Run Trace | [`c41368e`](https://github.com/nisakrkmz/sentinel_ops/commit/c41368ec8c5f4392d5545f72063aa89c91e95107) | `wsl -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 96 runs, 482 assertions, 0 failures; hedefli RuboCop 12 dosyada temiz; `bundle exec brakeman -q` — 0 warning | Lokal: Kurumsal Simülasyon → incident trace/handoff → Onay Kuyruğu'nda onayla/düzelt/reddet. Sağlayıcı anahtarı yoksa dürüstçe provider-unavailable handoff; canlı demo yapılmadı | Kod ve testler tamam; gerçek provider, deploy ve canlı doğrulama beklemede |
-| 7 | page-agent copilot | [link] | — | [adım] | ☐ |
+| 7 | page-agent araştırması, sabitlenmiş IIFE, UI allowlist, JS tool kapatma, PII masking hook, same-origin provider proxy ve state-change confirmation | Faz 6 uygulama/evidence commit'i: eklenecek | `bundle exec rails test` — 103 runs, 535 assertions, 0 failures; targeted RuboCop — 4 ilgili dosyada temiz; `bundle exec brakeman -q` — 0 warning; `node --check app/javascript/page_agent.js` — başarılı. Tam RuboCop taramasında değişmemiş `test/models/incident_test.rb:239` dosyasında 1 mevcut biçim ihlali var | Lokal tarayıcıda importmap modülü yüklendi, copilot paneli açıldı ve mock yanıtla görev tamamlandı; aynı-origin proxy isteği ve caller redaksiyonu doğrulandı (provider çağrısı mock ile kesildi). Gerçek sağlayıcı, deploy ve canlı demo beklemede | Page Agent UI/proxy yerel olarak testli; sağlayıcı anahtarı ve Faz 7 deploy/canlı doğrulama beklemede |
 
 **Eval sonuçları** (`eval/RESULTS.md` özeti, çalıştırma tarihi ve model ile):
 
@@ -81,7 +81,8 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 - Faz 3 RAG/Incident Memory kodu, KB UI'si, `bin/index_knowledge` ve 25 soruluk eval altyapısı eklendi. Gerçek embedding/decision/LLM provider erişimi olmadığı için KB indeksleme, canlı eval metrikleri ve kaynaklı gerçek model cevabı henüz doğrulanmadı; Render deploy/canlı demo yapılmadı.
 - Faz 4 REST/MCP uygulandı ve lokalde test edildi; `AGENT_TOKEN_PEPPER` Render ENV'ine eklenmedi, deploy ve canlı agent çağrısı yapılmadı.
 - Faz 5'in config tabanlı policy, workflow, API/MCP/UI orchestration, Onay Kuyruğu, feedback audit ve trace'i lokalde uygulanıp test edildi. Gerçek sağlayıcıyla triage→RAG→policy akışı, provider'sız fallback'in canlı gösterimi, Render deploy ve canlı doğrulama henüz yapılmadı. Simülasyonun REST API üzerinden açılış yapması ve P4 için canlı kaynaklı otonom çözüm de doğrulanmadı.
-- page-agent araştırması ve entegrasyonu henüz uygulanmadı.
+- Faz 6 Page Agent UI/proxy yerel olarak uygulanıp test edildi; sağlayıcı ENV'i olmadığı için gerçek model çağrısı, canlı copilot ve Render deploy doğrulanmadı.
+- Page Agent copilot read-only etkileşim allowlist'indedir. Örnek görev, "INC001024 için Incident Memory'de benzer olayları ve kaynakları bul, sonuçları özetle; atama değişikliğini insana öner." Atama, çözme ve onay copilot tarafından yapılmaz; mevcut kapsamda bunlar insan onayı gerektiren UI işlemleridir.
 
 ## Zaman
 
@@ -97,8 +98,9 @@ Süreleri **ölçülen** değerlerle doldur; tahmin yazma.
 | 2026-10-20 | Faz 3 | Ölçülemedi; bu oturum için aktif araç aralıklarının güvenilir zaman kaydı yok | Nisa dolduracak | `bfbac5d` | 20 sentetik + 4 çözümlenmiş vaka KB, typed RAG akışı, kaynak doğrulama/abstain, KB arayüzü ve 25 soruluk eval; gerçek sağlayıcı ve deploy doğrulanmadı |
 | 2026-10-20 | Faz 4 REST/MCP | Ölçülemedi; aktif çalışma sürelerini güvenilir zaman damgalarıyla ayıracak kayıt yok | Nisa dolduracak | `989682d` | Scope'lu REST/MCP, idempotency, discovery, event replay; 85 test geçti, Render doğrulaması beklemede |
 | 2026-10-20 | Faz 5 HITL | Ölçülemedi; bu oturum için aktif agent zamanını güvenilir biçimde ayıran başlangıç kaydı yok | Nisa dolduracak | `c41368e` | Policy ve workflow, UI/API/MCP bağlantısı, handoff onay/red feedback'i, simülasyon actor attribution, trace ve 96 test; canlı provider/deploy yok |
+| 2026-10-20 | Faz 6 Page Agent | Ölçülemedi; aktif agent başlangıç/bitiş aralıkları güvenilir biçimde kaydedilmedi | Nisa dolduracak | Commit sonrası eklenecek | 1.12.4 copilot, allowlist, proxy ve redaksiyon tamamlandı; 103 test, browser mock doğrulaması; gerçek provider/deploy yok |
 
-**Toplam:** Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2 ölçülemedi · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
+**Toplam:** Ölçülebilen Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2–6 ölçülemedi · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
 
 **Planlanan tahminler (gerçekleşenle karşılaştırmak için):**
 

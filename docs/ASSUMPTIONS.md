@@ -11,6 +11,7 @@
 - **Jev entegrasyonu:** Resmi Jev API/payload sözleşmesi doğrulanana kadar adapter unavailable döndürür. JSON provider için genel OpenAI-compatible HTTPS chat completions seçildi; bunun sağlayıcıya özel uyumluluğu gerçek credentials ile canlı smoke testte doğrulanmalıdır.
 - **Faz 3 vector store:** Deploy'da mevcut SQLite kullanımı ve küçük KB korpusu nedeniyle embedding vektörleri SQLite JSON alanlarında tutulup Ruby cosine similarity ile sıralanır; pgvector/ek servis eklenmedi. Bu tercih yalnızca küçük demo korpusu için uygundur. Render tanımında kalıcı disk yok, bu nedenle production'da DB ve embedding kalıcılığı garanti edilmez.
 - **Faz 3 providers:** Embedding ve JSON chat provider'ları HTTPS OpenAI-compatible endpoint adapter'larıdır; API anahtarı veya provider erişimi bu oturumda doğrulanmadı. Indexleme/eval gerçek ENV olmadan `not_run` kalır. Jev protokolü resmi sözleşme doğrulanana kadar kullanılmaz.
+- **Faz 6 Page Agent:** npm registry kontrolünde `page-agent@1.12.4` güncel sürümdü ve yayımlı IIFE demo bundle'ı (MIT lisansıyla) repoda sabitlenerek vendored kullanılıyor. `autoInit=false` ile demo endpoint/bootstrap devre dışı bırakılır; ayrı bir sunucu proxy'si olmadan provider/anahtar istemciye verilmez. `PAGE_AGENT_ALLOWED_MODELS`, seçilen tek modeli içeren sunucu allowlist'idir. Copilot yalnızca `data-agent-id` kontrollerini kullanır ve state-changing UI eylemleri için insan onayı zorunludur; mevcut UI'da atama aksiyonu olmadığı için atama copilot kapsamına dahil değildir.
 
 ## Açık doğrulama işleri
 

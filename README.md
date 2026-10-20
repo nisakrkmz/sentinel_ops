@@ -131,6 +131,14 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 - Kurumsal Simülasyon gerçek incident ve audit/handoff kayıtları üretir, `SentinelOps Monitoring Agent` actor'ıyla açılır. Dış izleme sistemine/API'ye çağrı yaptığı iddia edilmez. Simülasyon kaynaklı aksiyonlar UI'da **SİMÜLASYON** etiketi taşır.
 - Test kapsamı provider yokluğu, needs-human triage, P1 onay, grounded P3 auto-resolve ve insan onay/red akışlarını içerir. Gerçek sağlayıcı anahtarı olmadan bu canlı akış/eval ölçülmüş sayılmaz.
 
+## Page Agent copilot — Faz 6
+
+- Alibaba `page-agent@1.12.4` published IIFE bundle'ı ve MIT lisansı `public/vendor/` içinde sabitlenmiştir; `?autoInit=false` ile upstream demo bootstrap'ı kapalıdır. Kurulum, DOM tabanlı etkileşim ve sınırlar için [araştırma notu](docs/research/RAG_JEV_PAGE_AGENT.md).
+- Copilot UI yalnızca yapılandırılmış sunucu provider'ı varsa açılır. Gerekli server ENV: `PAGE_AGENT_API_KEY`, `PAGE_AGENT_BASE_URL` (HTTPS chat-completions base URL), `PAGE_AGENT_MODEL`, `PAGE_AGENT_ALLOWED_MODELS` (virgülle ayrılmış allowlist; selected model listede bulunmalı). Anahtar browser'a gönderilmez.
+- In-page copilot, yalnızca `data-agent-id` olan kontrolleri kullanır; `execute_javascript` aracı kapalıdır. Caller alanları, e-posta ve telefonlar browser custom-fetch hook'unda, ayrıca DB'deki caller adları server proxy'de maskelenir.
+- `POST /page-agent/v1/chat/completions` Rails CSRF/same-origin koruması, IP başına 10 req/dk rate limit'i, 64 KiB request, 1,200 completion token ve 8 sn provider read timeout'u uygular. Çoklu instance için rate-limit cache'i shared cache'e taşınmalıdır.
+- Copilot read/search/navigation içindir, incident değiştirme işlemlerini kendi yapmaz. Mutasyon formları insan onayı ister; assignment akışı copilot'a açılmamıştır. Turbo sayfa geçişinde agent dispose edilir. Gerçek provider ENV'i olmadığından live model çağrısı ve canlı demo doğrulanmadı.
+
 ---
 
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü

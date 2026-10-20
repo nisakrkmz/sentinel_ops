@@ -116,7 +116,7 @@
         <% @incidents.each do |incident| %>
           <tr>
             <td>
-              <%= link_to incident_path(incident), class: "ticket-number-badge" do %>
+              <%= link_to incident_path(incident), class: "ticket-number-badge", data: { agent_id: "incident-view" }, aria: { label: "Open incident #{incident.number}" } do %>
                 <%= incident.number %>
               <% end %>
             </td>
@@ -144,7 +144,7 @@
               </span>
             </td>
             <td style="max-width: 320px;">
-              <%= link_to incident_path(incident), style: "font-weight: 600; color: var(--text-primary); display: block;" do %>
+              <%= link_to incident_path(incident), style: "font-weight: 600; color: var(--text-primary); display: block;", data: { agent_id: "incident-view-description" }, aria: { label: "Open incident #{incident.number}" } do %>
                 <%= incident.short_description %>
               <% end %>
               <span style="font-size: 0.74rem; color: var(--text-dim); display: block; margin-top: 0.15rem;">
@@ -159,7 +159,7 @@
             </td>
             <td>
               <span style="font-weight: 500; color: var(--text-secondary); font-size: 0.82rem;">
-                <%= incident.requested_by %>
+                <%= tag.span incident.requested_by, data: { agent_private: true } %>
               </span>
             </td>
             <td>

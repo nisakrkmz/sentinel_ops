@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   get "/.well-known/agent-card.json", to: "api/v1/discovery#agent_card"
   get "/llms.txt", to: "api/v1/discovery#llms"
   post "/mcp", to: "mcp#handle"
+  post "/page-agent/v1/chat/completions", to: "page_agent_proxy#create"
 
   resources :knowledge_articles, only: [ :index, :show ], param: :slug, path: "knowledge"
 

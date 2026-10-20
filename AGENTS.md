@@ -58,9 +58,13 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 | `EMBEDDING_API_KEY` | Embedding sağlayıcısı anahtarı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_MODEL` | Çok dilli embedding model adı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_BASE_URL` | HTTPS OpenAI-compatible embeddings endpoint'i | Embedding sağlayıcısı seçilirse |
+| `PAGE_AGENT_API_KEY` | Page Agent proxy'sinin sağlayıcı anahtarı; yalnızca sunucu | Page Agent copilot etkinleştirilirse |
+| `PAGE_AGENT_BASE_URL` | HTTPS OpenAI-compatible chat-completions API base URL'i | Page Agent copilot etkinleştirilirse |
+| `PAGE_AGENT_MODEL` | Page Agent için seçili model | Allowlist içinde olmalı |
+| `PAGE_AGENT_ALLOWED_MODELS` | Virgülle ayrılmış model allowlist'i | Page Agent copilot etkinleştirilirse |
 | API rate limit | `config/api.yml` — token başına 120 req/60 sn, 1–100 page size | Varsayılan açık |
 
-`DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
+`DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Page Agent, bu dört ENV birlikte ayarlı ve seçilen model allowlist içinde ise etkinleşir; aksi halde UI copilot'ı beklemede gösterir, proxy 503 döndürür. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
 
 ## Agent REST API ve MCP
 
@@ -79,6 +83,16 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 - `/handoffs` insan onay kuyruğudur. Onay/red/düzeltme actor'ı ve feedback'i `decisions` ile audit edilir. Çözümün doğrulaması verilirse KB adayı oluşturulur; KB'ye doğrudan yazılmaz.
 - Incident detail'deki Agent Run Trace, triage/RAG/policy/human review kararlarını gösterir. Simülasyon incident'leri `origin=simulation` ve SİMÜLASYON UI etiketi taşır; gerçek dış altyapı aksiyonu yapmaz.
 - Faz 5 regresyon testi: `bin/rails test`; hedefli Ruby lint için değişen dosyaları `bundle exec rubocop` ile çalıştır.
+
+## Page Agent copilot
+
+- `page-agent@1.12.4` IIFE bundle'ı `public/vendor/page-agent-1.12.4.js` içinde MIT lisansı ve sürüm sabitlemesiyle vendored. Layout, `?autoInit=false` kullanır; vendor demo endpoint'ini başlatma.
+- Feature sadece `PAGE_AGENT_API_KEY`, `PAGE_AGENT_BASE_URL`, `PAGE_AGENT_MODEL`, `PAGE_AGENT_ALLOWED_MODELS` sunucu ENV'leri geçerliyse etkinleşir. `PAGE_AGENT_MODEL`, allowlist içinde olmalı; tüm endpoint'ler TLS/HTTPS kullanmalı.
+- Browser çağrıları `/page-agent/v1/chat/completions` same-origin proxy'sine gider. Proxy provider key'i ekler; istemciden gelen Authorization başlığını kullanmaz. Rate limit IP başına 10/dk, istek 64 KiB, completion 1,200 token, okuma timeout'u 8 sn. Rate-limit cache'i process-local'dir.
+- Copilot yalnızca `data-agent-id` interaktif kontrollerine izin verir; `execute_javascript` aracı kapalıdır. `data-agent-private` değerleri, DB'deki caller adları, email ve telefonlar LLM'e gönderilmeden maskelenir.
+- Copilot read/search/navigation içindir. Submit, resolution, assignment, claim, approve ve reject agent etkileşim allowlist'inde değildir; state-changing UI formları ayrıca insan onayı ister. Turbo navigation mevcut agent örneğini kapatır; extension ile multi-page destek entegre değildir.
+- Provider ENV yoksa UI "Provider beklemede" gösterir; credential paylaşmak için sohbete yapıştırma, yalnızca secret manager/Render server ENV kullan.
+- Kaynak ve limitler: [`docs/research/RAG_JEV_PAGE_AGENT.md`](docs/research/RAG_JEV_PAGE_AGENT.md).
 
 ## Keşif durumu
 

@@ -52,7 +52,7 @@
         <div class="form-grid-2">
           <div class="form-group">
             <%= f.label :requested_by, "Talep Eden Çalışan (Caller / Requested By)", class: "form-label" %>
-            <%= f.text_field :requested_by, class: "form-input", placeholder: "Örn: Sarah Jenkins (Finance VP)", required: true %>
+            <%= f.text_field :requested_by, class: "form-input", placeholder: "Örn: Sarah Jenkins (Finance VP)", required: true, data: { agent_private: true } %>
           </div>
 
           <div class="form-group">
