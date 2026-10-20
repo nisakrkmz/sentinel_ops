@@ -125,7 +125,7 @@ class McpController < Api::V1::BaseController
       opened_by_actor: current_actor,
       triage_status: "pending"
     )
-    Triage::Runner.call(incident)
+    AgentWorkflow::Runner.call(incident)
     incident_data(incident.reload)
   rescue ActiveRecord::RecordNotUnique
     existing = Incident.find_by!(idempotency_key: key)

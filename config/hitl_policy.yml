@@ -1,0 +1,23 @@
+default: &default
+  auto_resolve_priorities:
+    - p3_moderate
+    - p4_low
+  approval_priorities:
+    - p1_critical
+    - p2_high
+  critical_services:
+    - SAP ERP
+    - SAP ERP Production
+    - Payment Gateway
+    - Active Directory SSO
+  minimum_resolution_confidence: 0.85
+  human_review_group: Service Desk
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

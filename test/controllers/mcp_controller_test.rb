@@ -75,6 +75,8 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert_equal @actor.name, incident.requested_by
     assert_equal "pending", first.fetch("triage_status")
     assert_not incident.resolved?
+    assert_equal "provider_unavailable", incident.decisions.route.first.output_json["reason_code"]
+    assert_equal "provider_unavailable", incident.handoffs.open.sole.reason_code
 
     request.call(2)
     assert_response :success

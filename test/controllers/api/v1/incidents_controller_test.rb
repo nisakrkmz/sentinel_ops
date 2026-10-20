@@ -73,6 +73,9 @@ module Api
         assert_response :created
         incident_number = response.parsed_body.dig("data", "number")
         assert_equal "pending", response.parsed_body.dig("data", "triage_status")
+        incident = Incident.find_by!(idempotency_key: "payment-alert-001")
+        assert_equal "provider_unavailable", incident.decisions.route.first.output_json["reason_code"]
+        assert_equal "provider_unavailable", incident.handoffs.open.sole.reason_code
 
         post api_v1_incidents_url, params: payload, headers: headers, as: :json
         assert_response :ok
@@ -87,7 +90,7 @@ module Api
         assert_equal "idempotency_key_reused", response.parsed_body.fetch("code")
 
         assert_equal 1, Incident.where(idempotency_key: "payment-alert-001").count
-        assert_equal 1, Incident.find_by!(idempotency_key: "payment-alert-001").decisions.triage.count
+        assert_equal 1, incident.decisions.triage.count
         assert_equal "api", Incident.find_by!(idempotency_key: "payment-alert-001").origin
         assert_equal @actor.id, Incident.find_by!(idempotency_key: "payment-alert-001").opened_by_actor_id
         assert_equal @actor.name, Incident.find_by!(idempotency_key: "payment-alert-001").requested_by

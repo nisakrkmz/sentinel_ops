@@ -30,6 +30,9 @@
           <span class="service-pill" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
             <%= @incident.service_affected %>
           </span>
+          <% if @incident.origin == "simulation" %>
+            <span class="status-badge status-on-hold" aria-label="Simulated action">SİMÜLASYON</span>
+          <% end %>
 
           <span style="font-size: 0.78rem; color: var(--text-dim);">
             Açılış: <%= l(@incident.created_at, format: :short) %> · Talep Eden: <strong><%= @incident.requested_by %></strong>
@@ -232,10 +235,52 @@
         <% end %>
         Bilet insan triage'ı için açık kalır.
       </p>
+      <% end %>
+    <% if @policy_decision&.completed? %>
+      <% policy_output = @policy_decision.output_json %>
+      <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
+        HITL politikası: <strong><%= policy_output["action"] %></strong> · <%= policy_output["reason_code"] %>
+        <% if @handoff %>
+          · <%= link_to "Onay kuyruğunda incele", handoffs_path %>
+        <% end %>
+      </p>
     <% end %>
-    <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
-      Incident Memory / benzer geçmiş olaylar: RAG uygulaması Faz 3'te tamamlanana kadar devre dışı.
-    </p>
+  </div>
+</section>
+
+<section class="enterprise-card" style="margin-top: 1.25rem;" aria-label="Agent run trace">
+  <div class="enterprise-card-header">
+    <span class="card-title-text">Agent Run Trace</span>
+    <span class="card-count-badge"><%= @agent_trace.size %> karar</span>
+  </div>
+  <div style="padding: 1.25rem;">
+    <% if @agent_trace.empty? %>
+      <p>Agent karar izi henüz oluşmadı.</p>
+    <% else %>
+      <ol style="padding-left: 1.4rem;">
+        <% @agent_trace.each do |decision| %>
+          <% output = decision.output_json || {} %>
+          <li style="margin-bottom: 0.75rem;">
+            <strong><%= decision.kind.humanize %></strong>
+            <% if decision.kind == "route" %>
+              · <%= output["action"] %> (<%= output["reason_code"] %>)
+            <% elsif decision.kind == "resolution" %>
+              · <%= output["status"] || decision.status %>
+            <% elsif decision.kind == "verify" %>
+              · <%= output["action"] %>
+            <% else %>
+              · <%= decision.status %>
+            <% end %>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">
+              <%= decision.provider %> / <%= decision.model.presence || "model belirtilmedi" %>
+              <% if decision.confidence %> · Güven <%= number_to_percentage(decision.confidence * 100, precision: 0) %><% end %>
+              <% if decision.latency_ms %> · <%= decision.latency_ms %> ms<% end %>
+              <% if decision.sources.present? %> · Kaynak: <%= decision.sources.join(", ") %><% end %>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    <% end %>
   </div>
 </section>
 

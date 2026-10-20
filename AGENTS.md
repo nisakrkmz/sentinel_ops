@@ -72,6 +72,14 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 - `GET /api/v1/events` son `Last-Event-ID` sonrasındaki timeline kayıtlarını `text/event-stream` batch olarak döndürür; client otomatik reconnect ederek cursor'ı ilerletir.
 - API token plaintext'i yalnızca issue edildiği an elde edilir; hash'i saklanır. Public token issue endpoint'i yoktur.
 
+## HITL ve agent workflow
+
+- UI, `/api/v1` ve MCP incident açılışları `AgentWorkflow::Runner` kullanır. Sağlayıcı yoksa başarısız/pending triage audit edilir ve açık handoff üretilir; uydurma triage veya çözüm yoktur.
+- HITL eşikleri yalnızca `config/hitl_policy.yml` içindedir. P1/P2, major incident ve kritik servisler otomatik çözülmez. P3/P4 otomatik çözüm için çözüm confidence eşiği, doğrulanmış KB citation'ı ve cited root-cause chunk'ı zorunludur.
+- `/handoffs` insan onay kuyruğudur. Onay/red/düzeltme actor'ı ve feedback'i `decisions` ile audit edilir. Çözümün doğrulaması verilirse KB adayı oluşturulur; KB'ye doğrudan yazılmaz.
+- Incident detail'deki Agent Run Trace, triage/RAG/policy/human review kararlarını gösterir. Simülasyon incident'leri `origin=simulation` ve SİMÜLASYON UI etiketi taşır; gerçek dış altyapı aksiyonu yapmaz.
+- Faz 5 regresyon testi: `bin/rails test`; hedefli Ruby lint için değişen dosyaları `bundle exec rubocop` ile çalıştır.
+
 ## Keşif durumu
 
 - Son gözlenen repo commit'i: `40cb27a7948fa514cebf5854dda0ffe2d22cea11` (`Align project documentation and add logo`, 2026-10-19). Bu hash'in ödevde kastedilen "geçen hafta son commit'i" olduğu ayrıca doğrulanmış değildir.

@@ -93,7 +93,7 @@ module Api
           )
         end
 
-        Triage::Runner.call(incident)
+        AgentWorkflow::Runner.call(incident)
         render json: { data: serialize_incident(incident, include_triage: true) }, status: :created
       rescue ActiveRecord::RecordNotUnique
         existing = Incident.find_by!(idempotency_key: key)

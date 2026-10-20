@@ -23,6 +23,13 @@ Rails.application.routes.draw do
 
   resources :knowledge_articles, only: [ :index, :show ], param: :slug, path: "knowledge"
 
+  resources :handoffs, only: [ :index ] do
+    member do
+      post :accept
+      post :reject
+    end
+  end
+
   resources :incidents, only: [ :index, :new, :create, :show ] do
     member do
       post :start_progress

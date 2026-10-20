@@ -61,6 +61,9 @@ class IncidentsController < ApplicationController
     @timeline_events = @incident.timeline_events.order(created_at: :desc)
 
     @triage_attempt = @incident.decisions.triage.order(created_at: :desc).first
+    @policy_decision = @incident.decisions.route.order(created_at: :desc).first
+    @handoff = @incident.handoffs.open.order(created_at: :desc).first
+    @agent_trace = @incident.decisions.where(kind: %w[triage resolution route verify]).order(created_at: :asc)
     @resolution_decision = @incident.decisions.resolution.order(created_at: :desc).first
     @relevance_decision = @incident.decisions.verify.order(created_at: :desc).first
     @citation_chunks = KnowledgeChunk.includes(:knowledge_article).where(chunk_id: @resolution_decision&.sources || [])
@@ -80,12 +83,8 @@ class IncidentsController < ApplicationController
     @incident = Incident.new(incident_params)
 
     if @incident.save
-      triage_result = Triage::Runner.call(@incident)
-      notice = if triage_result.completed?
-                 "ITSM Bileti (#{@incident.number}) oluşturuldu. Agent triage tamamlandı."
-      else
-                 "ITSM Bileti (#{@incident.number}) oluşturuldu. Triage beklemede — insan kuyruğunda."
-      end
+      result = AgentWorkflow::Runner.call(@incident)
+      notice = "ITSM Bileti (#{@incident.number}) oluşturuldu. #{workflow_notice(result)}"
       redirect_to @incident, notice: notice
     else
       render :new, status: :unprocessable_entity
@@ -177,6 +176,10 @@ class IncidentsController < ApplicationController
   # Canlı gösterim simülasyon senaryoları
   def simulate
     scenario = params[:scenario] || "sap_erp"
+    Current.actor = Actor.find_or_create_by!(kind: :agent, name: "SentinelOps Monitoring Agent") do |actor|
+      actor.owner = "SentinelOps"
+      actor.scopes = []
+    end
 
     case scenario
     when "sap_erp"
@@ -221,13 +224,9 @@ class IncidentsController < ApplicationController
       )
     end
 
-    incident.update!(origin: :simulation)
-    triage_result = Triage::Runner.call(incident)
-    notice = if triage_result.completed?
-               "Kurumsal senaryo (#{incident.number}) oluşturuldu. Agent triage tamamlandı."
-    else
-               "Kurumsal senaryo (#{incident.number}) oluşturuldu. Triage beklemede — insan kuyruğunda."
-    end
+    incident.update!(origin: :simulation, opened_by_actor: Current.actor)
+    result = AgentWorkflow::Runner.call(incident)
+    notice = "Kurumsal senaryo (#{incident.number}) oluşturuldu. #{workflow_notice(result)}"
     redirect_to incident, notice: notice
   end
 
@@ -239,6 +238,21 @@ class IncidentsController < ApplicationController
 
   def set_current_actor
     Current.actor = Actor.demo_ui_operator
+  end
+
+  def workflow_notice(result)
+    case result.status
+    when "auto_resolve"
+      "Agent kaynaklı çözüm önerisini politika kapsamında uyguladı."
+    when "approval_required"
+      "Agent önerisi insan onay kuyruğunda; olay kapatılmadı."
+    when "handoff"
+      "Triage/kanıt beklemede — olay insan kuyruğuna devredildi."
+    when "already_resolved"
+      "Olay daha önce çözülmüş."
+    else
+      "Agent iş akışı tamamlandı: #{result.status}."
+    end
   end
 
   def incident_params

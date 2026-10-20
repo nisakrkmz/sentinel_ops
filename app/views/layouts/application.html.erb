@@ -64,6 +64,9 @@
       <!-- ITSM Navigation Bar -->
       <nav class="header-navbar">
         <div class="header-nav-links">
+          <%= link_to handoffs_path, class: "header-nav-link #{'active' if controller_name == 'handoffs'}" do %>
+            Onay Kuyruğu <span class="card-count-badge"><%= Handoff.open.count %></span>
+          <% end %>
           <%= link_to root_path, class: "header-nav-link #{'active' if current_page?(root_path)}" do %>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             <span>Incident Management (Olay Yönetimi)</span>
@@ -86,7 +89,8 @@
         </div>
 
         <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 500;">
-          ITIL v4 Service Operations Aligned
+          Agent kimlikleri: <%= Actor.agent.where(active: true).count %> aktif ·
+          Onay bekleyen: <%= Handoff.open.count %> · ITIL v4 Service Operations
         </div>
       </nav>
     </header>

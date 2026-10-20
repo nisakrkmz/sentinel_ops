@@ -122,6 +122,15 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 - Sağlayıcı yoksa incident yine açılır ve `triage_status=pending` döner; KB araması 503 verir. Çözüm alıntıları yalnızca onaylı KB chunk'larından kabul edilir. Çözüm önerisi aksiyonu kendi başına uygulamaz; insan doğrulaması sağlanırsa KB adayı onay kuyruğuna alınır.
 - API/MCP token'ları için admin arayüzü yoktur; token güvenilir operatör tarafından Rails console/runner üzerinden oluşturulmalı ve plaintext güvenli biçimde saklanmalıdır.
 
+## Agent workflow + HITL — Faz 5
+
+- UI, REST API incident create, MCP `open_incident` ve Kurumsal Simülasyon aynı `AgentWorkflow::Runner` orkestrasyonunu kullanır: triage → Incident Memory çözüm önerisi → config tabanlı HITL policy.
+- `config/hitl_policy.yml` içinde P1/P2, major-incident adayları ve kritik servisler için insan onayı; yalnızca P3/P4 için confidence, doğrulanmış citation ve root-cause kaynağı yeterliyse otomatik çözüm tanımlıdır. Provider yoksa incident açık kalır, triage pending olur ve insan handoff'u oluşturulur.
+- Agent tarafından üretilen resolution yalnızca onaylı KB chunk citation'larıyla çözüm aşamasına geçebilir. İnsan onayı/düzeltmesi olayı kapatabilir; opsiyonel verification girilirse çözüm `kb_candidates` kuyruğuna kaydedilir. Red ve düzeltme feedback'i `decisions` audit izine yazılır.
+- `/handoffs` açık onay/devir kuyruğudur; incident detail'deki **Agent Run Trace** kararları, sağlayıcı/model, güven, kaynaklar ve HITL sonucunu gösterir. Üst çubuk kayıtlı aktif agent kimliklerini ve açık handoff sayısını gösterir.
+- Kurumsal Simülasyon gerçek incident ve audit/handoff kayıtları üretir, `SentinelOps Monitoring Agent` actor'ıyla açılır. Dış izleme sistemine/API'ye çağrı yaptığı iddia edilmez. Simülasyon kaynaklı aksiyonlar UI'da **SİMÜLASYON** etiketi taşır.
+- Test kapsamı provider yokluğu, needs-human triage, P1 onay, grounded P3 auto-resolve ve insan onay/red akışlarını içerir. Gerçek sağlayıcı anahtarı olmadan bu canlı akış/eval ölçülmüş sayılmaz.
+
 ---
 
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü

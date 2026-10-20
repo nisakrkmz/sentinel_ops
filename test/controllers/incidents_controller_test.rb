@@ -50,6 +50,8 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", new_inc.triage_status
     assert_equal "failed", new_inc.decisions.triage.first.status
     assert_equal "provider_not_configured", new_inc.decisions.triage.first.error_code
+    assert_equal "provider_unavailable", new_inc.decisions.route.first.output_json["reason_code"]
+    assert_equal "provider_unavailable", new_inc.handoffs.open.sole.reason_code
   end
 
   test "should show incident" do
@@ -107,5 +109,43 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to incident_url(simulated)
     assert_equal "Global VPN Gateway", simulated.service_affected
     assert_equal "simulation", simulated.origin
+    assert_equal "agent", simulated.opened_by_actor.kind
+    assert_equal "SentinelOps Monitoring Agent", simulated.opened_by_actor.name
+    assert_equal "provider_unavailable", simulated.handoffs.open.sole.reason_code
+
+    get incident_url(simulated)
+    assert_response :success
+    assert_includes response.body, "SİMÜLASYON"
+    assert_includes response.body, "Agent Run Trace"
+    assert_includes response.body, "Onay kuyruğunda incele"
+  end
+
+  test "shows an agent run trace even when no provider is configured" do
+    @incident.update!(triage_status: "pending")
+    failed_triage = @incident.decisions.create!(
+      kind: :triage,
+      provider: "unconfigured",
+      output_json: {},
+      status: :failed,
+      error_code: "provider_not_configured"
+    )
+    policy = @incident.decisions.create!(
+      kind: :route,
+      provider: "hitl-policy",
+      output_json: { "action" => "handoff", "reason_code" => "provider_unavailable" }
+    )
+    @incident.handoffs.create!(
+      from_actor: Actor.find_or_create_by!(kind: :agent, name: "Trace Test Agent"),
+      to_actor_or_group: "Service Desk",
+      reason_code: "provider_unavailable",
+      brief: { "summary" => @incident.short_description }
+    )
+
+    get incident_url(@incident)
+
+    assert_response :success
+    assert_includes response.body, failed_triage.provider
+    assert_includes response.body, policy.output_json["action"]
+    assert_includes response.body, "Agent Run Trace"
   end
 end
