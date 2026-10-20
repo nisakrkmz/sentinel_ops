@@ -43,8 +43,8 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 
 | # | Özellik | Commit | Test / komut | Canlı demo adımı | Durum |
 |---|---|---|---|---|---|
-| 1 | Keşif ve baseline | Faz 0 dokümanları henüz commit edilmedi; başlangıç HEAD `40cb27a` | Faz 0: 22 runs, 111 assertions, 0 failures | Canlı URL 503; demo doğrulanamadı | Audit, assumptions ve prompt copies hazır; canlı screenshot yok |
-| 2 | Actor modeli + denetim izi | Faz 1 commit edilecek | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 35 runs, 163 assertions, 0 failures; targeted RuboCop temiz | Yerel attribution doğrulandı; canlı deploy/demo beklemede | Faz 1 yerel olarak tamamlandı; deploy edilmedi |
+| 1 | Keşif ve baseline | [`81d2cb1`](https://github.com/nisakrkmz/sentinel_ops/commit/81d2cb15f2cb6abd0a4c180fbc0710c6f7f271a1) (audit/baseline docs) | Faz 0: 22 runs, 111 assertions, 0 failures | Canlı URL 503; demo doğrulanamadı | Audit, assumptions ve prompt copies hazır; canlı screenshot yok |
+| 2 | Actor modeli + denetim izi | [`81d2cb1`](https://github.com/nisakrkmz/sentinel_ops/commit/81d2cb15f2cb6abd0a4c180fbc0710c6f7f271a1) | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 35 runs, 163 assertions, 0 failures; 16 dosyada RuboCop temiz; Brakeman 0 warning | Mevcut geliştirme DB'sindeki 6 olay ve tüm timeline kayıtları actor'a bağlı; canlı deploy/demo beklemede | Faz 1 tamamlandı ve commit'lendi; deploy edilmedi |
 | 3 | Tipli triage (Jev/LLM) + eval | [link] | `bin/eval_triage` | [adım] | ☐ |
 | 4 | RAG (Incident Memory) + abstain | [link] | `[test komutu]` | [adım] | ☐ |
 | 5 | Agent API + OpenAPI + MCP | [link] | `[test komutu]` | [adım] | ☐ |
@@ -87,9 +87,9 @@ Süreleri **ölçülen** değerlerle doldur; tahmin yazma.
 | 2026-10-19 | Faz 0 | 8 dk 40 sn (ölçülen çalışma aralığı: 23:28:30–23:37:10 +03) | Nisa dolduracak | Önceki HEAD `40cb27a`; yeni commit yok | Audit/assumptions/baseline notu, AGENTS.md ve prompt kopyaları; WSL'de 22 test geçti |
 | 2026-10-20 | Faz 0 takip | Yaklaşık 4 dk 43 sn (kullanıcı mesajları arasındaki beklemeler çıkarılarak ölçülen araç/iş aralıkları) | Nisa dolduracak | Yeni commit yok | Zaman takibi talebi ve kuralları güncellendi |
 | 2026-10-20 | Faz 0 düzeltme | 50 sn (10:32:22–10:33:12 +03) | Nisa dolduracak | Yeni commit yok | Bekleme süresinin aktif süreye eklenmesi düzeltildi |
-| 2026-10-20 | Faz 1 | Başlangıç 10:34:44 +03; kapanışta ölçülecek | Nisa dolduracak | Faz sonunda commit edilecek | Actor/audit migrasyonu, token ve handoff/decision modelleri, controller attribution ve testler |
+| 2026-10-20 | Faz 1 | 14 dk 28 sn (10:34:44–10:49:12 +03; bekleme yok) | Nisa dolduracak | `81d2cb1` | Actor/audit migrasyonu, hash'li token modeli, handoff/decision, attribution; 35 test geçti |
 
-**Toplam:** agent yaklaşık 14 dk 13 sn · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
+**Toplam:** agent yaklaşık 28 dk 41 sn · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
 
 **Planlanan tahminler (gerçekleşenle karşılaştırmak için):**
 
