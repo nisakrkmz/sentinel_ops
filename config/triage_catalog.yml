@@ -1,0 +1,27 @@
+categories:
+  - Enterprise Software
+  - Network Infrastructure
+  - Identity & Security
+  - Cloud Infrastructure
+  - End User Computing
+  - Email & Collaboration
+  - Database
+  - Storage
+  - Hardware
+services:
+  - SAP ERP
+  - SAP ERP Production
+  - Global VPN Gateway
+  - Active Directory SSO
+  - Payment Gateway
+  - Email & Collaboration
+  - Cloud Infrastructure
+  - unknown
+assignment_groups:
+  - Enterprise ERP Operations
+  - Global Network Operations
+  - Identity & Access Management
+  - Platform Operations
+  - ITSM Platform Operations
+  - Service Desk
+  - unknown

@@ -47,6 +47,9 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "human", new_inc.opened_by_actor.kind
     assert_equal "Demo UI Operator (unauthenticated)", new_inc.opened_by_actor.name
     assert_equal new_inc.opened_by_actor_id, new_inc.timeline_events.first.actor_id
+    assert_equal "pending", new_inc.triage_status
+    assert_equal "failed", new_inc.decisions.triage.first.status
+    assert_equal "provider_not_configured", new_inc.decisions.triage.first.error_code
   end
 
   test "should show incident" do
@@ -83,23 +86,6 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to incident_url(@incident)
     assert_equal "resolved", @incident.reload.state
     assert_equal "SM50 work processes increased to 36 and jobs staggered", @incident.resolution_notes
-  end
-
-  test "should apply past knowledge solution in 1 click" do
-    past = Incident.create!(
-      number: "INC000840",
-      short_description: "SAP ERP S/4HANA Background Batch Pool Exhaustion",
-      service_affected: "SAP ERP",
-      priority: :p1_critical,
-      state: :resolved,
-      root_cause_analysis: "rdisp/wp_no_dia limit reached",
-      resolution_notes: "SM50 work process pool raised to 36"
-    )
-
-    post apply_knowledge_incident_url(@incident), params: { past_incident_id: past.id }
-    assert_redirected_to incident_url(@incident)
-    assert_equal "resolved", @incident.reload.state
-    assert_includes @incident.resolution_notes, "INC000840"
   end
 
   test "should check sla and report status" do

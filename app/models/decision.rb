@@ -8,14 +8,15 @@ class Decision < ApplicationRecord
     resolution: "resolution",
     verify: "verify"
   }, validate: true
+  enum :status, { completed: "completed", failed: "failed" }, validate: true
 
   belongs_to :incident
   belongs_to :actor, optional: true
 
   validates :kind, presence: true
   validates :provider, presence: true
-  validates :output_json, presence: true
-  validates :output_json, presence: true
+  validates :output_json, presence: true, if: :completed?
+  validates :error_code, presence: true, if: :failed?
   validates :confidence, numericality: { in: 0.0..1.0 }, allow_nil: true
   validates :latency_ms, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validate :json_fields_have_expected_types

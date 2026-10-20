@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
   create_table "actors", force: :cascade do |t|
     t.string "kind", null: false
     t.string "name", null: false
@@ -50,6 +50,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_110000) do
     t.json "sources", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", default: "completed", null: false
+    t.string "error_code"
     t.index ["actor_id"], name: "index_decisions_on_actor_id"
     t.index ["incident_id"], name: "index_decisions_on_incident_id"
   end

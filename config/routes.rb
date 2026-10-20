@@ -8,7 +8,6 @@ Rails.application.routes.draw do
       post :put_on_hold
       post :resolve
       post :check_sla
-      post :apply_knowledge
     end
     collection do
       post :simulate

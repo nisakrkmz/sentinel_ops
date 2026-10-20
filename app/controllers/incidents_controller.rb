@@ -1,6 +1,6 @@
 class IncidentsController < ApplicationController
   before_action :set_current_actor
-  before_action :set_incident, only: [ :show, :start_progress, :investigate, :put_on_hold, :resolve, :check_sla, :apply_knowledge ]
+  before_action :set_incident, only: [ :show, :start_progress, :investigate, :put_on_hold, :resolve, :check_sla ]
 
   def index
     # Aktif biletlerin SLA sürelerini dinamik kontrol et
@@ -60,8 +60,7 @@ class IncidentsController < ApplicationController
     @incident.check_sla!
     @timeline_events = @incident.timeline_events.order(created_at: :desc)
 
-    # 100 Puanlık Acı Noktası Çözümü: Smart Incident Knowledge Matcher (Geçmiş Olay Hafızası)
-    @similar_incidents = @incident.find_similar_incidents(limit: 3)
+    @triage_attempt = @incident.decisions.triage.order(created_at: :desc).first
   end
 
   def new
@@ -77,7 +76,13 @@ class IncidentsController < ApplicationController
     @incident = Incident.new(incident_params)
 
     if @incident.save
-      redirect_to @incident, notice: "ITSM Bileti (#{@incident.number}) başarıyla oluşturuldu ve #{priority_label_for(@incident)} SLA süresi başlatıldı."
+      triage_result = Triage::Runner.call(@incident)
+      notice = if triage_result.completed?
+                 "ITSM Bileti (#{@incident.number}) oluşturuldu. Agent triage tamamlandı."
+      else
+                 "ITSM Bileti (#{@incident.number}) oluşturuldu. Triage beklemede — insan kuyruğunda."
+      end
+      redirect_to @incident, notice: notice
     else
       render :new, status: :unprocessable_entity
     end
@@ -113,16 +118,6 @@ class IncidentsController < ApplicationController
       redirect_to @incident, notice: "ITSM Bileti (#{@incident.number}) başarıyla çözüldü (Resolved) ve kurumsal hafızaya (Knowledge Base) eklendi."
     else
       redirect_to @incident, alert: "Bilet çözümlenirken bir hata oluştu."
-    end
-  end
-
-  # 100 Puan Acı Noktası Aksiyonu: Tek Tıkla Geçmiş Bilgiyi Uygulama
-  def apply_knowledge
-    past_incident = Incident.find(params[:past_incident_id])
-    if @incident.apply_knowledge_from!(past_incident)
-      redirect_to @incident, notice: "⚡ Knowledge Base Çözümü Uygulandı! Bilet (#{past_incident.number}) referans alınarak anında çözüldü."
-    else
-      redirect_to @incident, alert: "Geçmiş bilgi uygulanamadı."
     end
   end
 
@@ -184,7 +179,13 @@ class IncidentsController < ApplicationController
     end
 
     incident.update!(origin: :simulation)
-    redirect_to incident, notice: "⚡ Kurumsal ITSM Simülasyonu Başlatıldı! (#{incident.number}) - Smart Incident Knowledge Matcher geçmiş çözümleri arıyor..."
+    triage_result = Triage::Runner.call(incident)
+    notice = if triage_result.completed?
+               "Kurumsal senaryo (#{incident.number}) oluşturuldu. Agent triage tamamlandı."
+    else
+               "Kurumsal senaryo (#{incident.number}) oluşturuldu. Triage beklemede — insan kuyruğunda."
+    end
+    redirect_to incident, notice: notice
   end
 
   private

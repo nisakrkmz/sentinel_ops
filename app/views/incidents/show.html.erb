@@ -175,77 +175,55 @@
   </div>
 </div>
 
-<!-- =========================================================================
-     SMART INCIDENT KNOWLEDGE MATCHER (Geçmiş Olay Hafızası)
-     ========================================================================= -->
-<% if @similar_incidents.any? %>
-  <div class="knowledge-matcher-card">
-    <div class="matcher-header">
-      <div style="display: flex; align-items: center; gap: 0.65rem;">
-        <span class="matcher-badge">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          Smart Incident Knowledge Matcher
-        </span>
-        <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);">
-          Geçmiş Olay Hafızası Eşleşti!
-        </h3>
-      </div>
-      <span style="font-size: 0.78rem; color: #4338ca; font-weight: 600;">
-        Benzer geçmiş olayın çözüm notlarını tek adımda uygula
-      </span>
-    </div>
-
-    <% @similar_incidents.each do |match| %>
-      <% past = match[:incident] %>
-      <div class="matcher-item">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <span class="similarity-pill">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                %<%= match[:similarity_score] %> Benzerlik Skoru
-              </span>
-              <span class="ticket-number-badge"><%= past.number %></span>
-              <span class="service-pill"><%= past.service_affected %></span>
-            </div>
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
-              <%= past.short_description %>
-            </h4>
-          </div>
-
-          <!-- 1-Tıkla Çözümü Uygula Aksiyon Butonu -->
-          <% unless @incident.resolved? %>
-            <%= button_to apply_knowledge_incident_path(@incident, past_incident_id: past.id), method: :post, class: "btn btn-purple btn-sm", data: { turbo: false } do %>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <span>⚡ Bu Çözümü Uygula (1-Tıkla Çöz)</span>
-            <% end %>
-          <% end %>
-        </div>
-
-        <!-- Çözüm & Kök Neden Detayı -->
-        <div style="background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 0.85rem 1rem; font-size: 0.84rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-          <div>
-            <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">
-              Geçmişte Doğrulanan Kök Neden (RCA):
-            </div>
-            <p style="color: var(--text-secondary); line-height: 1.4;">
-              <%= past.root_cause_analysis %>
-            </p>
-          </div>
-
-          <div>
-            <div style="font-size: 0.72rem; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 0.25rem;">
-              Uygulanan Kesin Çözüm Notu:
-            </div>
-            <p style="color: #14532d; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.4; white-space: pre-line;">
-              <%= past.resolution_notes || past.resolution_steps %>
-            </p>
-          </div>
-        </div>
-      </div>
+<section class="enterprise-card" aria-label="Agent triage decision">
+  <div class="enterprise-card-header">
+    <span class="card-title-text">Agent Triage Kararı</span>
+    <% if @incident.triage_status == "done" && @triage_attempt&.completed? %>
+      <span class="status-badge status-resolved">Triage tamamlandı</span>
+    <% else %>
+      <span class="status-badge status-on-hold">Triage beklemede — insan kuyruğunda</span>
     <% end %>
   </div>
-<% end %>
+  <div style="padding: 1.25rem;">
+    <% if @triage_attempt&.completed? %>
+      <% output = @triage_attempt.output_json %>
+      <dl class="form-grid-2">
+        <% %w[priority impact urgency category affected_service assignment_group sla_breach_risk].each do |key| %>
+          <div>
+            <dt class="form-label"><%= key.humanize %></dt>
+            <dd><%= output[key] %></dd>
+          </div>
+        <% end %>
+        <div>
+          <dt class="form-label">Major incident candidate</dt>
+          <dd><%= output.dig("major_incident_candidate", "value") ? "Evet" : "Hayır" %> · <%= number_to_percentage(output.dig("major_incident_candidate", "probability").to_f * 100, precision: 0) %></dd>
+        </div>
+        <div>
+          <dt class="form-label">Needs human</dt>
+          <dd><%= output.dig("needs_human", "value") ? "Evet" : "Hayır" %> · <%= output.dig("needs_human", "reason_code") %> · <%= number_to_percentage(output.dig("needs_human", "probability").to_f * 100, precision: 0) %></dd>
+        </div>
+      </dl>
+      <p style="margin-top: 0.75rem;"><strong>Gerekçe:</strong> <%= output["rationale"] %></p>
+      <p style="font-size: 0.78rem; color: var(--text-muted);">
+        Provider: <%= @triage_attempt.provider %> · Model: <%= @triage_attempt.model.presence || "bilinmiyor" %> · Gecikme: <%= @triage_attempt.latency_ms %> ms
+      </p>
+    <% else %>
+      <p>
+        <% if @triage_attempt&.error_code == "jev_contract_unverified" %>
+          Jev adapter sözleşmesi doğrulanmadığı için etkin değil.
+        <% elsif @triage_attempt&.error_code.present? %>
+          Triage sağlayıcısı kullanılamıyor (<%= @triage_attempt.error_code %>). Otomatik karar kaydedilmedi.
+        <% else %>
+          Triage sağlayıcısı yapılandırılmadı. Otomatik karar verilmedi.
+        <% end %>
+        Bilet insan triage'ı için açık kalır.
+      </p>
+    <% end %>
+    <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
+      Incident Memory / benzer geçmiş olaylar: RAG uygulaması Faz 3'te tamamlanana kadar devre dışı.
+    </p>
+  </div>
+</section>
 
 <!-- =========================================================================
      İki kolonlu olay formu ve zaman çizelgesi

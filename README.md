@@ -91,6 +91,15 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 
 `render.yaml` şu anda `AGENT_TOKEN_PEPPER`'ı tanımlamıyor. Token işlemleri herhangi bir deployed API'de etkinleştirilmeden önce Render server environment'a güçlü bir pepper eklenmelidir.
 
+## Typed incident triage — Faz 2
+
+- `DECISION_PROVIDER=groq|nvidia|huggingface` ile OpenAI-compatible JSON Schema triage adapter'ı seçilir. Sunucu ortamında `DECISION_API_KEY`, `DECISION_MODEL` ve tam HTTPS `DECISION_BASE_URL` verilmelidir. İstek toplam 8 saniyeyi aşmayacak şekilde sınırlandırılır ve en fazla bir retry yapılır.
+- Jev protokolü/payload resmi dokümanla doğrulanmadığından `DECISION_PROVIDER=jev` dürüstçe beklemede kalır; Jev kullanıldığı iddia edilmez.
+- Provider yoksa/başarısızsa kayıt yine oluşur, `triage_status=pending` kalır ve başarısız deneme hata koduyla `decisions` tablosuna audit edilir; sahte öncelik/cevap üretilmez.
+- Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
+- Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Incident Memory/RAG Faz 3'e kadar beklemededir.
+- `ruby bin/eval_triage` 40 etiketli TR/EN örnekte yalnızca baseline'ı çalıştırır. Gerçek model karşılaştırması açıkça `EVAL_LIVE=1 ruby bin/eval_triage` ve gerçek provider config gerektirir; anahtarsız eval model metriği uydurmaz. Güncel rapor: [`eval/RESULTS.md`](eval/RESULTS.md).
+
 ---
 
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü

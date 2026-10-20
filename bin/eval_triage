@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/boot"
+require_relative "../config/environment"
+require_relative "../eval/baselines/keyword_baseline"
+require "json"
+require "date"
+
+golden_path = Rails.root.join("eval/triage_golden.jsonl")
+records = File.readlines(golden_path, chomp: true).reject(&:empty?).map { |line| JSON.parse(line) }
+raise "Expected at least 40 labeled incidents; found #{records.length}" if records.length < 40
+
+def metrics(records, predictions, latencies_ms)
+  total = records.length
+  correct_priority = records.zip(predictions).count { |record, prediction| record.fetch("expected_priority") == prediction.fetch("priority") }
+  true_positive = records.zip(predictions).count do |record, prediction|
+    record.fetch("expected_needs_human") && prediction.fetch("needs_human")
+  end
+  predicted_positive = predictions.count { |prediction| prediction.fetch("needs_human") }
+  actual_positive = records.count { |record| record.fetch("expected_needs_human") }
+  {
+    "priority_accuracy" => (correct_priority.to_f / total).round(4),
+    "priority_confusion_matrix" => confusion_matrix(records, predictions),
+    "needs_human_precision" => (predicted_positive.zero? ? 0.0 : true_positive.to_f / predicted_positive).round(4),
+    "needs_human_recall" => (actual_positive.zero? ? 0.0 : true_positive.to_f / actual_positive).round(4),
+    "needs_human_true_positive" => true_positive,
+    "needs_human_predicted_positive" => predicted_positive,
+    "needs_human_actual_positive" => actual_positive,
+    "average_latency_ms" => (latencies_ms.sum.to_f / latencies_ms.length).round(2)
+  }
+end
+
+def confusion_matrix(records, predictions)
+  labels = %w[P1 P2 P3 P4]
+  labels.to_h do |expected|
+    [ expected, labels.to_h do |predicted|
+      count = records.zip(predictions).count do |record, output|
+        record.fetch("expected_priority") == expected && output.fetch("priority") == predicted
+      end
+      [ predicted, count ]
+    end ]
+  end
+end
+
+baseline_latencies = []
+baseline_predictions = records.map do |record|
+  started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  prediction = Eval::Baselines::KeywordBaseline.call(record)
+  baseline_latencies << (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
+  prediction
+end
+report = {
+  "date" => Date.today.iso8601,
+  "dataset" => golden_path.relative_path_from(Rails.root).to_s,
+  "examples" => records.length,
+  "baseline" => metrics(records, baseline_predictions, baseline_latencies),
+  "provider" => {
+    "status" => "not_run",
+    "note" => "No model metrics are reported unless EVAL_LIVE=1 and a real provider is configured."
+  }
+}
+
+if ENV["EVAL_LIVE"] == "1"
+  provider = Triage::DecisionProviders::Factory.build
+  raise "Live eval requested but the decision provider is not configured" unless provider.configured?
+
+  provider_latencies = []
+  outputs = records.map do |record|
+    incident = Struct.new(:short_description, :description, :service_affected, :category, :assignment_group).new(
+      record.fetch("short_description"),
+      record.fetch("description"),
+      record.fetch("service_affected"),
+      "Enterprise Software",
+      "ITSM Platform Operations"
+    )
+    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    output = provider.call(incident)
+    provider_latencies << (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
+    errors = Triage::Schema.validate(output)
+    raise "Provider output failed validation for #{record.fetch('id')}: #{errors.join('; ')}" if errors.any?
+
+    {
+      "priority" => output.fetch("priority"),
+      "needs_human" => output.fetch("needs_human").fetch("value")
+    }
+  end
+  report["provider"] = {
+    "status" => "completed",
+    "provider" => provider.provider,
+    "model" => provider.model,
+    "metrics" => metrics(records, outputs, provider_latencies)
+  }
+end
+
+output_path = Rails.root.join("eval/RESULTS.md")
+File.write(output_path, <<~MARKDOWN)
+  # Triage evaluation
+
+  - Date: #{report.fetch("date")}
+  - Dataset: `#{report.fetch("dataset")}` (#{report.fetch("examples")} labeled tickets)
+  - Provider: #{report.dig("provider", "status") == "completed" ? "#{report.dig('provider', 'provider')} / #{report.dig('provider', 'model')}" : report.dig("provider", "note")}
+
+  ## Keyword baseline (evaluation-only)
+
+  ```json
+  #{JSON.pretty_generate(report.fetch("baseline"))}
+  ```
+
+  ## Model provider
+
+  ```json
+  #{JSON.pretty_generate(report.fetch("provider"))}
+  ```
+
+  Model metrics are intentionally omitted unless they come from a real provider call (`EVAL_LIVE=1`).
+MARKDOWN
+
+puts "Wrote #{output_path} (#{records.length} labeled examples; model status: #{report.dig('provider', 'status')})"

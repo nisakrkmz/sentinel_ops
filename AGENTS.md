@@ -20,8 +20,8 @@ bin/rails db:prepare
 bin/rails db:seed
 bin/rails server -b 0.0.0.0 -p 3000
 bin/rails test
-bin/eval_triage      # triage eval (Faz 2'de eklenecek)
-bin/live_smoke       # gerçek sağlayıcı duman testi (Faz 2'de eklenecek)
+ruby bin/eval_triage  # keyword baseline; gerçek provider kıyası için EVAL_LIVE=1
+bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 ```
 
 ## Deploy (Render)
@@ -44,8 +44,12 @@ bin/live_smoke       # gerçek sağlayıcı duman testi (Faz 2'de eklenecek)
 | `RAILS_MAX_THREADS` | Rails/Puma thread sayısı | Render'da `3` |
 | `DATABASE_PATH` | Production SQLite dosya yolu | Render'da `/rails/storage/production.sqlite3` |
 | `AGENT_TOKEN_PEPPER` | API token HMAC digest'i için secret pepper | Token issue/auth işlemleri kullanılırsa |
+| `DECISION_PROVIDER` | `jev` \| `groq` \| `nvidia` \| `huggingface` | Triage provider kullanılırsa |
+| `DECISION_API_KEY` | Schema-constrained triage provider key'i | LLM JSON provider seçilirse |
+| `DECISION_MODEL` | Triage model adı | LLM JSON provider seçilirse |
+| `DECISION_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | LLM JSON provider seçilirse |
 
-`DECISION_PROVIDER`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri hedef mimaride önerilmiştir; şu anki `render.yaml` içinde tanımlı değildir. `AGENT_TOKEN_PEPPER` da Render tanımında yoktur; token işlemlerini deploy'da etkinleştirmeden önce sunucu ortamına ekle. Yeni sağlayıcı anahtarları yalnızca sunucu ortamında tutulur. Anahtarlar repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
+`DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
 
 ## Keşif durumu
 
@@ -53,6 +57,7 @@ bin/live_smoke       # gerçek sağlayıcı duman testi (Faz 2'de eklenecek)
 - Gerçek stack, veri modeli, matcher ve deploy bulguları `docs/AUDIT.md` içinde; ölçüm sınırlamaları `docs/baseline/README.md` içinde kayıtlıdır.
 - Başlangıç keşfi sırasındaki test sonucu WSL Ubuntu / Ruby 3.3.8 üzerinde `22 runs, 111 assertions, 0 failures, 0 errors, 0 skips` oldu. Windows host Ruby 3.3.12 ortamında Rails gem'i kurulu olmadığından test başlatılamadı.
 - Faz 1: actor attribution, hash'li API token, decision/handoff audit tabloları ve incident metadata eklendi. Render'da `AGENT_TOKEN_PEPPER` tanımlı değil; token işlemleri deploy ortamında etkin sayılmamalıdır.
+- Faz 2'de provider entegrasyonu eklendiğinde ENV ve eval talimatlarını güncelle; Jev resmi sözleşmesi doğrulanmadan çalışıyor iddia etme.
 - Doğrudan kullanıcıya görünen `/healthz` beklenmemeli; mevcut sağlık endpoint'i `/up`'tır.
 
 ## Mimari kuralları

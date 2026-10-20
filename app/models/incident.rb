@@ -260,39 +260,6 @@ class Incident < ApplicationRecord
     sla_deadline.present? && Time.current > sla_deadline
   end
 
-  # =========================================================================
-  # Geçmiş olay hafızası: benzer çözülmüş kayıtları önerir.
-  # =========================================================================
-
-  def find_similar_incidents(limit: 3)
-    resolved_candidates = Incident.where(state: :resolved)
-                                  .or(Incident.where(status: :resolved))
-                                  .where.not(id: id)
-    return [] if resolved_candidates.empty?
-
-    scored = resolved_candidates.map do |past|
-      score = calculate_similarity_with(past)
-      {
-        incident: past,
-        similarity_score: score,
-        matched_service: (service_affected.to_s.downcase == past.service_affected.to_s.downcase),
-        recommended_solution: past.resolution_notes.presence || past.resolution_steps.presence || "Geçmiş çözüm notu mevcut değil."
-      }
-    end
-
-    scored.select { |item| item[:similarity_score] >= 35 }
-          .sort_by { |item| -item[:similarity_score] }
-          .first(limit)
-  end
-
-  # Benzer geçmiş olayın çözümünü uygulama
-  def apply_knowledge_from!(past_incident)
-    resolve!(
-      resolution_notes: "Önerilen Geçmiş Çözüm uygulandı (Kaynak: #{past_incident.number}): #{past_incident.resolution_notes || past_incident.resolution_steps}",
-      root_cause: "Geçmiş Vaka Analizi (#{past_incident.number}): #{past_incident.root_cause_analysis}"
-    )
-  end
-
   private
 
   def sync_service_now_fields
@@ -367,41 +334,5 @@ class Incident < ApplicationRecord
       event_type: "created",
       message: "Yeni ITSM Bileti (#{number}) açıldı. Talep Eden: #{requested_by}, Servis: #{service_affected}, Öncelik: #{priority_short_label}. Hedef SLA: #{sla_deadline.strftime('%H:%M:%S')}."
     )
-  end
-
-  def calculate_similarity_with(other)
-    # İki olay aynı hata imzasına sahipse %98 eşleşme
-    if error_signature.present? && error_signature == other.error_signature
-      return 98
-    end
-
-    score = 0
-
-    # 1. Aynı servis ise +35 puan
-    if service_affected.to_s.downcase == other.service_affected.to_s.downcase
-      score += 35
-    end
-
-    # 2. Aynı kategori ise +10 puan
-    if category.to_s.downcase == other.category.to_s.downcase && category.present?
-      score += 10
-    end
-
-    # 3. Metin ve açıklama benzerliği (Jaccard Similarity)
-    tokens_self = extract_keywords("#{short_description} #{description}")
-    tokens_other = extract_keywords("#{other.short_description} #{other.description}")
-
-    if tokens_self.any? && tokens_other.any?
-      intersection = (tokens_self & tokens_other).size
-      union = (tokens_self | tokens_other).size
-      overlap_pct = (intersection.to_f / union * 55).round
-      score += overlap_pct
-    end
-
-    [ score, 99 ].min
-  end
-
-  def extract_keywords(text)
-    text.to_s.downcase.scan(/[a-z0-9_]{3,}/).uniq - %w[the and for with this that error exception failure problem issue bileti incident]
   end
 end
