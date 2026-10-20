@@ -1,6 +1,8 @@
 # SentinelOps - ServiceNow ITSM Kurumsal Tohum Verileri (Knowledge Base / Incident Memory)
 
 TimelineEvent.delete_all
+Handoff.delete_all
+Decision.delete_all
 Incident.delete_all
 
 puts "Kurumsal ServiceNow ITSM Geçmiş Çözülmüş Biletleri (Knowledge Base) Ekleniyor..."

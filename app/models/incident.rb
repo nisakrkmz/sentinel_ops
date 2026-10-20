@@ -33,6 +33,10 @@ class Incident < ApplicationRecord
     STATUS_MAPPINGS
   end
 
+  def assign_default_actor
+    self.opened_by_actor ||= Current.actor || Actor.demo_ui_operator
+  end
+
   # Geriye dönük uyumluluk için severity enum
   enum :severity, { low: 0, medium: 1, high: 2, critical: 3 }, default: :medium, prefix: :legacy_sev
 
@@ -94,13 +98,20 @@ class Incident < ApplicationRecord
   public
 
   has_many :timeline_events, -> { order(created_at: :asc) }, dependent: :destroy
+  belongs_to :opened_by_actor, class_name: "Actor", optional: true
+  has_many :decisions, dependent: :destroy
+  has_many :handoffs, dependent: :destroy
 
   # Validasyonlar
   validates :short_description, presence: true
   validates :service_affected, presence: true
+  validates :origin, inclusion: { in: %w[ui api mcp simulation] }
+  validates :triage_status, inclusion: { in: %w[pending done failed needs_human] }
+  validates :idempotency_key, uniqueness: true, allow_nil: true
 
   # Callback'ler
   before_validation :sync_service_now_fields, on: [ :create, :update ]
+  before_validation :assign_default_actor, on: :create
   before_create :generate_ticket_number
   before_create :set_sla_and_defaults
   after_create :log_creation_event

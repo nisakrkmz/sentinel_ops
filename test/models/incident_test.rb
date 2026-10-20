@@ -29,6 +29,27 @@ class IncidentTest < ActiveSupport::TestCase
     assert_not_nil incident.sla_deadline
   end
 
+  test "incident receives a demo actor and triage defaults while preserving idempotency uniqueness" do
+    first = Incident.create!(
+      short_description: "Database connection saturation",
+      service_affected: "Payment Gateway",
+      idempotency_key: "agent-event-001"
+    )
+
+    duplicate = Incident.new(
+      short_description: "Repeated database connection saturation",
+      service_affected: "Payment Gateway",
+      idempotency_key: "agent-event-001"
+    )
+
+    assert_equal "ui", first.origin
+    assert_equal "pending", first.triage_status
+    assert first.opened_by_actor.human?
+    assert_equal first.opened_by_actor_id, first.timeline_events.first.actor_id
+    assert_not duplicate.valid?
+    assert_includes duplicate.errors.attribute_names, :idempotency_key
+  end
+
   test "önceliğe göre dinamik SLA süreleri doğru atanır (P1: 15m, P2: 2h, P3: 4h, P4: 24h)" do
     freeze_time do
       p1 = Incident.create!(short_description: "P1 Olay", service_affected: "Payment", priority: :p1_critical)

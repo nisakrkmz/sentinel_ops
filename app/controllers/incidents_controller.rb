@@ -1,4 +1,5 @@
 class IncidentsController < ApplicationController
+  before_action :set_current_actor
   before_action :set_incident, only: [ :show, :start_progress, :investigate, :put_on_hold, :resolve, :check_sla, :apply_knowledge ]
 
   def index
@@ -182,6 +183,7 @@ class IncidentsController < ApplicationController
       )
     end
 
+    incident.update!(origin: :simulation)
     redirect_to incident, notice: "⚡ Kurumsal ITSM Simülasyonu Başlatıldı! (#{incident.number}) - Smart Incident Knowledge Matcher geçmiş çözümleri arıyor..."
   end
 
@@ -189,6 +191,10 @@ class IncidentsController < ApplicationController
 
   def set_incident
     @incident = Incident.find(params[:id])
+  end
+
+  def set_current_actor
+    Current.actor = Actor.demo_ui_operator
   end
 
   def incident_params

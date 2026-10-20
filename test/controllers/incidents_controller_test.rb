@@ -44,6 +44,9 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/\AINC\d{6}\z/, new_inc.number)
     assert_equal "Active Directory SSO", new_inc.service_affected
     assert_equal "new_ticket", new_inc.state
+    assert_equal "human", new_inc.opened_by_actor.kind
+    assert_equal "Demo UI Operator (unauthenticated)", new_inc.opened_by_actor.name
+    assert_equal new_inc.opened_by_actor_id, new_inc.timeline_events.first.actor_id
   end
 
   test "should show incident" do
@@ -112,5 +115,6 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     simulated = Incident.last
     assert_redirected_to incident_url(simulated)
     assert_equal "Global VPN Gateway", simulated.service_affected
+    assert_equal "simulation", simulated.origin
   end
 end

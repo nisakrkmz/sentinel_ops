@@ -83,6 +83,14 @@ Resolved (Çözüldü)
 
 22 test senaryosu Ubuntu/WSL ortamında 19 Ekim 2026 tarihinde çalıştırıldı: **22 runs, 111 assertions, 0 failures, 0 errors, 0 skips**. Ayrıca GitHub Actions CI, `b831627` commit'inde başarılı tamamlandı.
 
+## Agent-first temeli — Faz 1
+
+Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ilişkilendirilir; mevcut oturum açma sistemi olmadığından web arayüzündeki kayıtlar **"Demo UI Operator (unauthenticated)"** aktörünü kullanır. Bu demo actor gerçek kullanıcı doğrulaması veya RBAC değildir. Incident `origin`, `triage_status` ve isteğe bağlı unique `idempotency_key` alanlarını taşır.
+
+`ApiToken` ham bearer token'ı saklamaz; HMAC-SHA256 digest tutar, scope'ları sınırlar, kullanım zamanını izler ve iptal/süre sonu denetimi yapar. Token issue/auth çağrılarında `AGENT_TOKEN_PEPPER` sunucu ortamında tanımlı olmalıdır. Şu an bu token modellerini kullanan REST endpoint'i henüz yoktur. `Decision` ve `Handoff` tabloları audit/provenance ve insana devir kayıtları için eklenmiştir; henüz AI sağlayıcısı veya workflow bu kayıtları otomatik oluşturmuyor.
+
+`render.yaml` şu anda `AGENT_TOKEN_PEPPER`'ı tanımlamıyor. Token işlemleri herhangi bir deployed API'de etkinleştirilmeden önce Render server environment'a güçlü bir pepper eklenmelidir.
+
 ---
 
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü
@@ -125,7 +133,7 @@ Resolved (Çözüldü)
 
 1. **Active Directory / LDAP Canlı Entegrasyonu:** Gerçek bir Microsoft Domain Controller yerine kurumsal SSO Kerberos senkronizasyonu simüle edilmiş ve JWT formatında hata fırlatılmıştır.
 2. **İki Yönlü E-Posta Dönüştürücü (Inbound Email Parsing):** Kullanıcıların e-posta atarak bilet açması veya e-posta yanıtıyla bilet güncellemesi için SMTP/IMAP worker servisi kurulmamış; biletler web formu ve simülasyon motoru ile üretilmektedir.
-3. **Rol Tabanlı Erişim Kontrolü (RBAC):** ServiceNow'daki yüzlerce yetki rolü (admin, itil, itil_admin, ess) yerine tüm bilet aksiyonları hızlı sunum ve değerlendirme amacıyla açık bırakılmıştır.
+3. **Rol Tabanlı Erişim Kontrolü (RBAC):** ServiceNow'daki yüzlerce yetki rolü (admin, itil, itil_admin, ess) yerine tüm bilet aksiyonları hızlı sunum ve değerlendirme amacıyla açık bırakılmıştır. Faz 1'in "Demo UI Operator (unauthenticated)" actor kaydı yalnızca denetim atfıdır; kimlik doğrulama veya yetkilendirme sağlamaz.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
 6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI, README ve G2 ekran görüntüsü eklenen `b831627` commit'inde de başarılı tamamlandı. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
@@ -142,6 +150,7 @@ Resolved (Çözüldü)
 bin/rails test
 
 # Son doğrulama: 22 runs, 111 assertions, 0 failures, 0 errors, 0 skips (Ubuntu/WSL, 2026-10-19).
+# Agent-first Faz 1 doğrulaması: 35 runs, 163 assertions (Ubuntu/WSL, 2026-10-20).
 ```
 
 ---
