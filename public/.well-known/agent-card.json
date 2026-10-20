@@ -1,0 +1,28 @@
+{
+  "name": "SentinelOps",
+  "description": "Agent-accessible ITSM incident management with scoped actions, audited triage, and approved knowledge search.",
+  "url": "https://sentinel-ops-k0km.onrender.com/api/v1",
+  "version": "1.0.0",
+  "documentation": "https://sentinel-ops-k0km.onrender.com/api/v1/openapi.json",
+  "interfaces": [
+    { "url": "https://sentinel-ops-k0km.onrender.com/api/v1", "protocol": "REST" },
+    { "url": "https://sentinel-ops-k0km.onrender.com/mcp", "protocol": "MCP JSON-RPC 2.0" }
+  ],
+  "authentication": {
+    "schemes": ["Bearer"],
+    "token_endpoint": null
+  },
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "skills": [
+    { "id": "open_incident", "description": "Create and request typed triage for an incident; requires incidents:create." },
+    { "id": "search_incidents", "description": "List or retrieve incidents; requires incidents:read." },
+    { "id": "watch_incidents", "description": "Read incident events via SSE; requires events:read." },
+    { "id": "claim_incident", "description": "Claim an unassigned incident; requires incidents:claim." },
+    { "id": "search_knowledge", "description": "Search approved, embedded knowledge; requires kb:read." },
+    { "id": "handoff_incident", "description": "Hand an incident to a human/group with a structured brief; requires handoff:create." },
+    { "id": "resolve_incident", "description": "Resolve an incident with validated citations; requires incidents:resolve." }
+  ]
+}

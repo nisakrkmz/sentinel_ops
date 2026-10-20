@@ -1,0 +1,14 @@
+default: &default
+  requests: 120
+  period_seconds: 60
+  default_page_size: 25
+  maximum_page_size: 100
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

@@ -33,7 +33,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 - [x] Faz 1: actor, token, decision, handoff ve incident audit alanları; migrasyon ve model/controller testleri (WSL)
 - [x] Uygulama triage'ından anahtar kelime tabanlı karar mantığının kaldırılması; tipli karar sağlayıcısı ve şema doğrulaması
 - [x] RAG ile kaynaklı çözüm önerisi; kanıt yetersizse abstain (gerçek provider/index ve canlı metrik beklemede)
-- [ ] Agent-first API (+ OpenAPI, agent-card) ve MCP sunucusu
+- [x] Agent-first REST API (+ OpenAPI, agent-card), MCP sunucusu ve SSE olay replay'i (Render'da live doğrulama beklemede)
 - [ ] Politika tabanlı HITL: otonom çözüm / onay bekleyen / devir
 - [ ] Canlı Agent Run Trace ve Onay Kuyruğu
 - [ ] page-agent araştırması ve sunucu proxy'li, maskelemeli entegrasyon
@@ -47,7 +47,7 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 | 2 | Actor modeli + denetim izi | [`81d2cb1`](https://github.com/nisakrkmz/sentinel_ops/commit/81d2cb15f2cb6abd0a4c180fbc0710c6f7f271a1) | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 35 runs, 163 assertions, 0 failures; 16 dosyada RuboCop temiz; Brakeman 0 warning | Mevcut geliştirme DB'sindeki 6 olay ve tüm timeline kayıtları actor'a bağlı; canlı deploy/demo beklemede | Faz 1 tamamlandı ve commit'lendi; deploy edilmedi |
 | 3 | Tipli triage altyapısı + eval baseline | [`4c21c13`](https://github.com/nisakrkmz/sentinel_ops/commit/4c21c13b46c7677b1035bb3a61bf821bd898c4b7) | `wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bundle exec rails test'` — 46 runs, 202 assertions, 0 failures; `bundle exec rubocop` — 19 files, no offenses; Brakeman — 0 warnings; `ruby bin/eval_triage` — 40 örnek | Canlı sağlayıcı anahtarı ve deploy olmadığı için doğrulanmadı | Uygulama mantığı tamamlandı; gerçek model çağrısı ve deploy beklemede |
 | 4 | RAG (Incident Memory) + abstain | [`bfbac5d`](https://github.com/nisakrkmz/sentinel_ops/commit/bfbac5d3352bc53d98a28f5d88804a2f16047f9a) | `bundle exec rails test` — 67 runs, 310 assertions, 0 failures; RuboCop — 21 files, no offenses; `bundle exec brakeman -q` — 0 warnings; `./bin/eval_rag` — 25 cases, `not_run`; temporary migrate/seed rerun — 24 articles, 96 chunks, 6 incidents both runs | Gerçek provider key/index ve production DB erişimi yok; canlı doğrulama beklemede | Uygulama, 25 senaryolu eval corpus ve `not_run` raporu hazır; sentetik KB açıkça etiketli |
-| 5 | Agent API + OpenAPI + MCP | [link] | `[test komutu]` | [adım] | ☐ |
+| 5 | Agent REST API + OpenAPI + agent-card + MCP + SSE | Commit sonrası eklenecek | `bundle exec rails test` — 85 runs, 411 assertions, 0 failures; RuboCop — 8 API files, no offenses; Brakeman — 0 warnings | Local API/MCP contract tests pass; Render token pepper/provider ENV ve deploy doğrulanmadı | Scope'lu REST ve MCP, idempotency, cursor paging, SSE event batch, kaynak doğrulama ve makine okunur hatalar |
 | 6 | Politika motoru + HITL + Run Trace | [link] | `[test komutu]` | [adım] | ☐ |
 | 7 | page-agent copilot | [link] | — | [adım] | ☐ |
 
@@ -79,7 +79,8 @@ Vaat edilenler (her biri aşağıda kanıtlanacak, kanıtlanmayan "yapılmadı" 
 - Render paneli erişimi olmadığından deploy tetikleyicisi doğrulanamadı.
 - Faz 2'de typed triage şeması, HTTPS JSON-schema provider adapter'ı, karar kaydı, `triage_pending` fallback'i ve eval-only keyword baseline uygulandı. Sağlayıcı anahtarı olmadığı için gerçek model metriği ve `bin/live_smoke` çıktısı alınmadı; deploy/canlı demo yapılmadı.
 - Faz 3 RAG/Incident Memory kodu, KB UI'si, `bin/index_knowledge` ve 25 soruluk eval altyapısı eklendi. Gerçek embedding/decision/LLM provider erişimi olmadığı için KB indeksleme, canlı eval metrikleri ve kaynaklı gerçek model cevabı henüz doğrulanmadı; Render deploy/canlı demo yapılmadı.
-- Agent API/MCP, HITL/Run Trace ve page-agent henüz uygulanmadı.
+- Faz 4 REST/MCP uygulandı ve lokalde test edildi; `AGENT_TOKEN_PEPPER` Render ENV'ine eklenmedi, deploy ve canlı agent çağrısı yapılmadı.
+- HITL policy/Run Trace ve page-agent henüz uygulanmadı.
 
 ## Zaman
 
@@ -93,6 +94,7 @@ Süreleri **ölçülen** değerlerle doldur; tahmin yazma.
 | 2026-10-20 | Faz 1 | 14 dk 28 sn (10:34:44–10:49:12 +03; bekleme yok) | Nisa dolduracak | `81d2cb1` | Actor/audit migrasyonu, hash'li token modeli, handoff/decision, attribution; 35 test geçti |
 | 2026-10-20 | Faz 2 | Ölçülemedi; başlangıç 11:02:36 +03 kaydedildi, aktif araç aralıklarının toplamı güvenilir biçimde çıkarılamadı | Nisa dolduracak | Commit sonrası eklenecek | Typed triage ve sağlayıcı altyapısı, toplam 40 örnekli baseline; 46 test geçti, gerçek model çağrısı/deploy yok |
 | 2026-10-20 | Faz 3 | Ölçülemedi; bu oturum için aktif araç aralıklarının güvenilir zaman kaydı yok | Nisa dolduracak | `bfbac5d` | 20 sentetik + 4 çözümlenmiş vaka KB, typed RAG akışı, kaynak doğrulama/abstain, KB arayüzü ve 25 soruluk eval; gerçek sağlayıcı ve deploy doğrulanmadı |
+| 2026-10-20 | Faz 4 REST/MCP | Ölçülemedi; aktif çalışma sürelerini güvenilir zaman damgalarıyla ayıracak kayıt yok | Nisa dolduracak | Commit sonrası eklenecek | Scope'lu REST/MCP, idempotency, discovery, event replay; 85 test geçti, Render doğrulaması beklemede |
 
 **Toplam:** Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2 ölçülemedi · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
 

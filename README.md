@@ -112,6 +112,16 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 - Knowledge Base sekmesi semantik arama ve tıklanabilir chunk kaynakları sunar. Incident detail'de “Kaynaklı çözüm öner” çağrısı retrieval + grading + grounded generation çalıştırır. Provider veya indeks yoksa hata/bekleme gösterilir; keyword/sahte cevap yoktur.
 - `eval/rag_golden.jsonl`: 25 soru (20 cevaplanabilir, 5 cevapsız). `ruby bin/eval_rag` canlı provider metriklerini çalıştırmadan dürüst `not_run` raporu yazar. Gerçek hit@1/hit@3, citation validity, doğru abstain ve gecikme ölçümü için `EVAL_RAG_LIVE=1 ruby bin/eval_rag` ve üç server-side provider config'i gerekir. Rapor: [`eval/RAG_RESULTS.md`](eval/RAG_RESULTS.md).
 
+## Agent REST API + MCP — Faz 4
+
+- API base: `/api/v1`. Keşif belgeleri: [`/api/v1/openapi.json`](https://sentinel-ops-k0km.onrender.com/api/v1/openapi.json), [`/.well-known/agent-card.json`](https://sentinel-ops-k0km.onrender.com/.well-known/agent-card.json), [`/llms.txt`](https://sentinel-ops-k0km.onrender.com/llms.txt). MCP JSON-RPC endpoint'i `/mcp`.
+- Bütün REST/MCP istekleri `Authorization: Bearer <token>` ister. `ApiToken.issue!` plaintext'i yalnızca bir kere döndürür; DB'de pepper'lı HMAC digest tutulur. `AGENT_TOKEN_PEPPER` yalnızca server ENV'inde olmalı. Actor scope listesi token'ın alabileceği en yüksek izin kümesidir; istek başına ilgili scope ayrıca kontrol edilir.
+- REST: `POST /incidents` (`Idempotency-Key` zorunlu), incident liste/detay, yorum, claim, resolve, handoff, `GET /kb/search` ve `GET /events` (SSE event batch + `Last-Event-ID` replay).
+- MCP araçları: `open_incident`, `search_kb`, `get_incident`, `propose_resolution`, `resolve_incident`, `handoff_to_human`. Araç çağrıları JSON-RPC 2.0'dır ve aynı actor scope'larını kontrol eder. Ticket metni güvenilmeyen veri olarak kalır; hiçbir scope veya tool izni veremez.
+- Hata gövdeleri `{code, message, retryable, field_errors}` biçimindedir. `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` başlıkları token başına 120 istek/dakika verir; limit process içi cache ile tutulduğundan çoklu instance için dağıtık cache gerekir.
+- Sağlayıcı yoksa incident yine açılır ve `triage_status=pending` döner; KB araması 503 verir. Çözüm alıntıları yalnızca onaylı KB chunk'larından kabul edilir. Çözüm önerisi aksiyonu kendi başına uygulamaz; insan doğrulaması sağlanırsa KB adayı onay kuyruğuna alınır.
+- API/MCP token'ları için admin arayüzü yoktur; token güvenilir operatör tarafından Rails console/runner üzerinden oluşturulmalı ve plaintext güvenli biçimde saklanmalıdır.
+
 ---
 
 ## 🎯 100 Puanlık Pas: Kullanıcı Acısı & SentinelOps Çözümü

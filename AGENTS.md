@@ -58,8 +58,19 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 | `EMBEDDING_API_KEY` | Embedding sağlayıcısı anahtarı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_MODEL` | Çok dilli embedding model adı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_BASE_URL` | HTTPS OpenAI-compatible embeddings endpoint'i | Embedding sağlayıcısı seçilirse |
+| API rate limit | `config/api.yml` — token başına 120 req/60 sn, 1–100 page size | Varsayılan açık |
 
 `DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
+
+## Agent REST API ve MCP
+
+- REST base `/api/v1`; OpenAPI `/api/v1/openapi.json`; A2A tarzı discovery `/.well-known/agent-card.json`; açıklama `/llms.txt`.
+- MCP JSON-RPC 2.0 endpoint'i `/mcp`; desteklenen tools `open_incident`, `search_kb`, `get_incident`, `propose_resolution`, `resolve_incident`, `handoff_to_human`.
+- Her REST işlemi ve MCP tool'u ilgili `incidents:*`, `kb:read`, `handoff:create` veya `events:read` scope'unu doğrular. Token oluşturulurken actor scope'larının ötesine geçilemez.
+- `POST /api/v1/incidents` ile MCP `open_incident` aynı idempotency key ve normalized payload digest'ini kullanır. Aynı key/farklı payload `409`/tool error verir; tekrar triage çalıştırılmaz.
+- API yanıtları `config/api.yml` ile yapılandırılan token başına rate limit başlıkları taşır. Sayaçlar process içi cache'dedir; birden çok instance'a geçilirse paylaşımlı cache ayarlanmalıdır.
+- `GET /api/v1/events` son `Last-Event-ID` sonrasındaki timeline kayıtlarını `text/event-stream` batch olarak döndürür; client otomatik reconnect ederek cursor'ı ilerletir.
+- API token plaintext'i yalnızca issue edildiği an elde edilir; hash'i saklanır. Public token issue endpoint'i yoktur.
 
 ## Keşif durumu
 

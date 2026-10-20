@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_152000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_160000) do
   create_table "actors", force: :cascade do |t|
     t.string "kind", null: false
     t.string "name", null: false
@@ -106,7 +106,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_152000) do
     t.string "origin", default: "ui", null: false
     t.string "triage_status", default: "pending", null: false
     t.string "idempotency_key"
+    t.string "idempotency_request_digest"
     t.index ["idempotency_key"], name: "index_incidents_on_idempotency_key", unique: true
+    t.index ["idempotency_request_digest"], name: "index_incidents_on_idempotency_request_digest"
     t.index ["number"], name: "index_incidents_on_number", unique: true
     t.index ["opened_by_actor_id"], name: "index_incidents_on_opened_by_actor_id"
   end
