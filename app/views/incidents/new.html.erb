@@ -37,6 +37,12 @@
     </div>
 
     <div style="padding: 1.5rem;">
+      <% if PageAgentProxy.configured? %>
+        <div class="info-banner" role="note">
+          Page Agent bu formu senin adına doldurup gönderebilir. Yeni kayıt oluşturulmadan önce gönderimi onaylaman istenir.
+        </div>
+      <% end %>
+
       <%= form_with model: @incident, local: true do |f| %>
         <% if @incident.errors.any? %>
           <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; color: #991b1b;">
@@ -52,7 +58,7 @@
         <div class="form-grid-2">
           <div class="form-group">
             <%= f.label :requested_by, "Talep Eden Çalışan (Caller / Requested By)", class: "form-label" %>
-            <%= f.text_field :requested_by, class: "form-input", placeholder: "Örn: Sarah Jenkins (Finance VP)", required: true, data: { agent_private: true } %>
+            <%= f.text_field :requested_by, class: "form-input", placeholder: "Örn: Sarah Jenkins (Finance VP)", required: true, data: { agent_private: true, agent_id: "incident-requested-by" } %>
           </div>
 
           <div class="form-group">
@@ -64,7 +70,7 @@
               ["Corporate Payment Gateway", "Payment Gateway"],
               ["Office 365 Exchange", "Office 365 Exchange"],
               ["Salesforce CRM Integration", "Salesforce CRM"]
-            ], {}, class: "form-select" %>
+            ], {}, class: "form-select", data: { agent_id: "incident-service" } %>
           </div>
         </div>
 
@@ -76,7 +82,7 @@
               ["P2 - High (2 Saat SLA)", "p2_high"],
               ["P3 - Moderate (4 Saat SLA)", "p3_moderate"],
               ["P4 - Low (24 Saat SLA)", "p4_low"]
-            ], {}, class: "form-select" %>
+            ], {}, class: "form-select", data: { agent_id: "incident-priority" } %>
           </div>
 
           <div class="form-group">
@@ -87,7 +93,7 @@
               ["Identity & Security", "Identity & Security"],
               ["Cloud Infrastructure", "Cloud Infrastructure"],
               ["Workstation & Hardware", "Workstation & Hardware"]
-            ], {}, class: "form-select" %>
+            ], {}, class: "form-select", data: { agent_id: "incident-category" } %>
           </div>
 
           <div class="form-group">
@@ -98,23 +104,23 @@
               ["Identity & Access Management", "Identity & Access Management"],
               ["Platform Operations", "Platform Operations"],
               ["ITSM Service Desk", "ITSM Service Desk"]
-            ], {}, class: "form-select" %>
+            ], {}, class: "form-select", data: { agent_id: "incident-assignment-group" } %>
           </div>
         </div>
 
         <div class="form-group">
           <%= f.label :short_description, "Kısa Açıklama (Short Description)", class: "form-label" %>
-          <%= f.text_field :short_description, class: "form-input", placeholder: "Örn: SAP ERP S/4HANA Background Batch Pool Exhaustion (RFC 500 Connection Timeout)", required: true %>
+          <%= f.text_field :short_description, class: "form-input", placeholder: "Örn: SAP ERP S/4HANA Background Batch Pool Exhaustion (RFC 500 Connection Timeout)", required: true, data: { agent_id: "incident-short-description" } %>
         </div>
 
         <div class="form-group">
           <%= f.label :description, "Detaylı Hata Açıklaması / Loglar (Description)", class: "form-label" %>
-          <%= f.text_area :description, rows: 5, class: "form-textarea", placeholder: "Arızanın ayrıntılarını, kullanıcı şikayetlerini ve varsa sistem loglarını buraya girin...", style: "font-family: var(--font-sans);" %>
+          <%= f.text_area :description, rows: 5, class: "form-textarea", placeholder: "Arızanın ayrıntılarını, kullanıcı şikayetlerini ve varsa sistem loglarını buraya girin...", style: "font-family: var(--font-sans);", data: { agent_id: "incident-description" } %>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
           <%= link_to "İptal", root_path, class: "btn btn-secondary" %>
-          <%= f.submit "Bileti Oluştur & SLA Başlat", class: "btn btn-primary" %>
+          <%= f.submit "Bileti Oluştur & SLA Başlat", class: "btn btn-primary", data: { agent_id: "create-incident-submit", agent_confirm: "Page Agent'ın hazırladığı yeni incident kaydı oluşturulsun mu?" } %>
         </div>
       <% end %>
     </div>

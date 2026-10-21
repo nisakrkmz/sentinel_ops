@@ -23,6 +23,14 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     get new_incident_url
     assert_response :success
     assert_select "form"
+    assert_select "[data-agent-id='incident-requested-by']"
+    assert_select "[data-agent-id='incident-service']"
+    assert_select "[data-agent-id='incident-priority']"
+    assert_select "[data-agent-id='incident-category']"
+    assert_select "[data-agent-id='incident-assignment-group']"
+    assert_select "[data-agent-id='incident-short-description']"
+    assert_select "[data-agent-id='incident-description']"
+    assert_select "input[data-agent-id='create-incident-submit'][data-agent-confirm]"
     assert_no_match(/ServiceNow|G2|Capterra/i, response.body)
   end
 

@@ -44,6 +44,11 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="page-agent-model" content="approved-model"'
     assert_includes response.body, "/vendor/page-agent-1.12.4.js?autoInit=false"
     refute_includes response.body, "test-server-key"
+
+    get new_incident_path
+
+    assert_response :success
+    assert_select ".info-banner", text: /Page Agent bu formu senin adına doldurup gönderebilir/
   end
 
   test "rejects cross-origin requests and models outside the configured allowlist" do
