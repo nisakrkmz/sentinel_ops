@@ -14,9 +14,9 @@ The versioned public declarations in the [published package tarball](https://reg
 - remove the `execute_javascript` tool, so the copilot cannot run arbitrary page scripts;
 - strip client-supplied authorization and send requests only to the same-origin proxy;
 - mask caller names marked `data-agent-private`, plus stored caller values, email addresses, and phone numbers before provider forwarding;
-- require a human confirmation before the new incident form is submitted by the copilot.
+- require a human confirmation before the new incident form is submitted or the SAP simulation is triggered by the copilot.
 
-The copilot can fill and submit only the new incident form when explicitly asked by the operator; a browser confirmation is required before creating the record. It may set the initial assignment group only when the operator explicitly specifies one; otherwise it keeps the form default. It cannot reassign, claim, resolve, approve, reject, simulate incidents, or otherwise mutate existing incidents. The operator must use the normal UI for those actions. Ticket content remains untrusted data; the copilot's system instructions say to ignore embedded instructions.
+The copilot can fill and submit only the new incident form when explicitly asked by the operator; a browser confirmation is required before creating the record. It may set the initial assignment group only when the operator explicitly specifies one; otherwise it keeps the form default. When explicitly requested, it can also trigger the SAP corporate simulation after browser confirmation; this creates a clearly labeled local demo incident and does not affect external systems. It cannot reassign, claim, resolve, approve, reject, or otherwise mutate existing incidents. The operator must use the normal UI for those actions. Ticket content remains untrusted data; the copilot's system instructions say to ignore embedded instructions.
 
 The server-side proxy is `POST /page-agent/v1/chat/completions`. Provider credentials never enter the page. Configuration is server-only: `PAGE_AGENT_API_KEY`, HTTPS `PAGE_AGENT_BASE_URL` (the OpenAI-compatible API base, normally ending in `/v1`), `PAGE_AGENT_MODEL`, and `PAGE_AGENT_ALLOWED_MODELS` (comma-separated exact allowlist that must contain the selected model). The proxy enforces same-origin requests, Rails CSRF, a 10-request-per-minute per-IP limit, a 64 KiB request cap, a 1,200-token completion cap, TLS verification, and an eight-second read timeout. Its rate-limit cache is process-local, so horizontally scaled deployments need a shared cache.
 
@@ -24,7 +24,7 @@ No Page Agent provider credentials were supplied for this phase. Without all fou
 
 ## Fit with SentinelOps
 
-- **Useful for:** a human operator searching the incident list and Incident Memory, or drafting a new incident from the new-ticket form with explicit confirmation.
+- **Useful for:** a human operator searching the incident list and Incident Memory, drafting a new incident with explicit confirmation, or launching the labeled SAP demo simulation with explicit confirmation.
 - **Not the agent-first interface:** monitoring/resolver agents should use the scoped REST API or MCP, where identity, idempotency, audit, and HITL policy are explicit. Page Agent is a browser copilot for a human, not a replacement for those contracts.
 - **Limits:** the embedded integration handles one page at a time. Turbo navigation disposes the current copilot; after opening the new-ticket form, the operator must launch it again before asking it to fill the form. Multi-page automation would require the separate extension and is out of scope. A task takes multiple model/tool turns and can expose page context to the configured model, hence the local proxy, narrow DOM allowlist, and masking.
 - **Jev and RAG:** Jev/System 1 remains the typed, auditable decision layer when a verified provider is configured. Incident Memory retrieval and grounded System 2 responses remain distinct. Page Agent can help a human navigate/search those surfaces; it does not make triage decisions, provide citations, or execute the incident workflow.

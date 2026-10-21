@@ -44,6 +44,7 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="page-agent-model" content="approved-model"'
     assert_includes response.body, "/vendor/page-agent-1.12.4.js?autoInit=false"
     refute_includes response.body, "test-server-key"
+    assert_select "button[data-agent-id='corporate-simulation'][data-agent-confirm]"
 
     get new_incident_path
 

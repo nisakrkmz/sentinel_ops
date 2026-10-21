@@ -56,7 +56,7 @@
           <% end %>
 
           <!-- Hızlı Canlı Simülasyon Dropdown / Butonları -->
-          <%= button_to simulate_incidents_path(scenario: "sap_erp"), method: :post, class: "btn btn-purple btn-sm", data: { turbo: false, agent_confirm: "Yeni bir SAP simülasyon incident'i oluşturulsun mu?" }, title: "SAP ERP Batch Pool Exhaustion Simülasyonu" do %>
+          <%= button_to simulate_incidents_path(scenario: "sap_erp"), method: :post, class: "btn btn-purple btn-sm", data: { turbo: false, agent_confirm: "Yeni bir SAP simülasyon incident'i oluşturulsun mu?", agent_id: "corporate-simulation" }, title: "SAP ERP Batch Pool Exhaustion Simülasyonu" do %>
             <span>⚡ Kurumsal Simülasyon</span>
           <% end %>
 
