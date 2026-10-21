@@ -1,25 +1,15 @@
-<!-- Header & ITSM Action Bar -->
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+<!-- Sayfa Başlığı -->
+<div class="page-header">
   <div>
-    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-      <span style="font-size: 0.75rem; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.05em;">
-        ITIL v4 Service Operations
-      </span>
-      <span style="color: var(--text-dim);">·</span>
-      <span style="font-size: 0.75rem; color: var(--text-muted);">Incident Management Workspace</span>
-    </div>
-    <h1 style="font-size: 1.65rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em;">
-      ITSM Incident Management
-    </h1>
-    <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.2rem;">
-      Kurumsal BT altyapı arızalarını yönetin, SLA sürelerini izleyin ve agent triage kararlarını denetleyin.
-    </p>
+    <span class="eyebrow">ITIL v4 Service Operations · Incident Management Workspace</span>
+    <h1 class="page-title">ITSM Incident Management</h1>
+    <p class="page-subtitle">Kurumsal BT altyapı arızalarını yönetin, SLA sürelerini izleyin ve agent triage kararlarını denetleyin.</p>
   </div>
 
-  <div style="display: flex; gap: 0.65rem;">
+  <div class="page-header-actions">
     <%= link_to new_incident_path, class: "btn btn-primary" do %>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      <span>+ Yeni Bilet Aç</span>
+      <span>Yeni Bilet Aç</span>
     <% end %>
   </div>
 </div>
@@ -29,7 +19,9 @@
   <div class="metric-card accent-blue">
     <div class="metric-title">
       <span>Toplam Açık Bilet</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      <span class="metric-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      </span>
     </div>
     <div class="metric-number"><%= @open_count %></div>
     <div class="metric-subtitle">Müdahale veya çözüm bekleyen aktif biletler</div>
@@ -37,37 +29,45 @@
 
   <div class="metric-card accent-amber">
     <div class="metric-title">
-      <span>İşlemde (In Progress)</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>İşlemde</span>
+      <span class="metric-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </span>
     </div>
-    <div class="metric-number" style="color: #d97706;"><%= @in_progress_count %></div>
+    <div class="metric-number"><%= @in_progress_count %></div>
     <div class="metric-subtitle">Uzmanlarca aktif incelenen bilet sayısı</div>
   </div>
 
   <div class="metric-card accent-rose">
     <div class="metric-title">
-      <span>SLA İhlalleri (Breached)</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      <span>SLA İhlalleri</span>
+      <span class="metric-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </span>
     </div>
-    <div class="metric-number" style="color: #dc2626;"><%= @breached_count %></div>
+    <div class="metric-number"><%= @breached_count %></div>
     <div class="metric-subtitle">Hedef SLA süresi aşılan ve eskalasyon gerektiren</div>
   </div>
 
   <div class="metric-card accent-purple">
     <div class="metric-title">
       <span>Beklemede</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span class="metric-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      </span>
     </div>
-    <div class="metric-number" style="color: #7c3aed;"><%= @on_hold_count %></div>
+    <div class="metric-number"><%= @on_hold_count %></div>
     <div class="metric-subtitle">Yanıt veya ek işlem bekleyen biletler</div>
   </div>
 
   <div class="metric-card accent-emerald">
     <div class="metric-title">
       <span>Çözülen Biletler</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <span class="metric-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </span>
     </div>
-    <div class="metric-number" style="color: #16a34a;"><%= @resolved_count %></div>
+    <div class="metric-number"><%= @resolved_count %></div>
     <div class="metric-subtitle">Knowledge Base'e eklenmiş arşiv vakalar</div>
   </div>
 </div>
@@ -76,11 +76,11 @@
 <div class="enterprise-card">
   <div class="enterprise-card-header">
     <div class="card-title-group">
-      <span class="card-title-text">ITSM Bilet Listesi</span>
-      <span class="card-count_badge card-count-badge"><%= @incidents.count %> Kayıt</span>
+      <span class="card-title-text">Bilet Listesi</span>
+      <span class="card-count-badge"><%= @incidents.count %> Kayıt</span>
       <% if params[:q].present? %>
-        <span style="font-size: 0.78rem; color: var(--text-muted);">
-          "<%= params[:q] %>" için arama sonuçları · <%= link_to "Temizle", root_path, style: "font-weight: 600;" %>
+        <span class="card-subtitle">
+          "<%= params[:q] %>" için arama sonuçları · <%= link_to "Filtreyi temizle", root_path, class: "cell-title-link" %>
         </span>
       <% end %>
     </div>
@@ -98,131 +98,118 @@
   </div>
 
   <% if @incidents.any? %>
-    <table class="itsm-table">
-      <thead>
-        <tr>
-          <th>Bilet No</th>
-          <th>Öncelik</th>
-          <th>Durum</th>
-          <th>Kısa Açıklama</th>
-          <th>Etkilenen Servis</th>
-          <th>Talep Eden (Caller)</th>
-          <th>SLA Durumu</th>
-          <th>Atanan Grup / Kişi</th>
-          <th style="text-align: right;">İşlem</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @incidents.each do |incident| %>
+    <div class="table-scroll">
+      <table class="itsm-table">
+        <thead>
           <tr>
-            <td>
-              <%= link_to incident_path(incident), class: "ticket-number-badge", data: { agent_id: "incident-view" }, aria: { label: "Open incident #{incident.number}" } do %>
-                <%= incident.number %>
-              <% end %>
-            </td>
-            <td>
-              <% priority_class = case incident.priority
-                                  when "p1_critical" then "badge-p1"
-                                  when "p2_high" then "badge-p2"
-                                  when "p3_moderate" then "badge-p3"
-                                  else "badge-p4"
-                                  end %>
-              <span class="badge <%= priority_class %>">
-                <%= incident.priority_short_label %>
-              </span>
-            </td>
-            <td>
-              <% state_class = case incident.state
-                               when "new_ticket" then "badge-new"
-                               when "in_progress" then "badge-in-progress"
-                               when "on_hold" then "badge-on-hold"
-                               when "resolved" then "badge-resolved"
-                               else "badge-new"
-                               end %>
-              <span class="badge <%= state_class %>">
-                <%= incident.state_label.split(" ").first %>
-              </span>
-            </td>
-            <td style="max-width: 320px;">
-              <%= link_to incident_path(incident), style: "font-weight: 600; color: var(--text-primary); display: block;", data: { agent_id: "incident-view-description" }, aria: { label: "Open incident #{incident.number}" } do %>
-                <%= incident.short_description %>
-              <% end %>
-              <span style="font-size: 0.74rem; color: var(--text-dim); display: block; margin-top: 0.15rem;">
-                Açılış: <%= l(incident.created_at, format: :short) %> · Kat: <%= incident.category %>
-              </span>
-            </td>
-            <td>
-              <span class="service-pill">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                <%= incident.service_affected %>
-              </span>
-            </td>
-            <td>
-              <span style="font-weight: 500; color: var(--text-secondary); font-size: 0.82rem;">
-                <%= tag.span incident.requested_by, data: { agent_private: true } %>
-              </span>
-            </td>
-            <td>
-              <% if incident.resolved? %>
-                <span class="badge badge-within-sla">
-                  ✓ Çözüldü
-                </span>
-              <% elsif incident.sla_breached? %>
-                <span class="badge badge-sla-breached">
-                  ⚠ SLA Breached
-                </span>
-              <% else %>
-                <% rem = incident.sla_time_remaining_seconds %>
-                <span class="badge badge-within-sla" style="font-family: var(--font-mono); font-size: 0.78rem;">
-                  ⏱ <%= "%02d:%02d" % [rem / 60, rem % 60] %>
-                </span>
-              <% end %>
-            </td>
-            <td>
-              <span style="font-size: 0.78rem; color: var(--text-secondary); display: block;">
-                <%= incident.assignment_group %>
-              </span>
-              <span style="font-size: 0.72rem; color: var(--text-dim);">
-                <%= incident.assigned_to %>
-              </span>
-            </td>
-            <td style="text-align: right; white-space: nowrap;">
-              <%= link_to incident_path(incident), class: "btn btn-secondary btn-sm" do %>
-                <span>Detay</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              <% end %>
-            </td>
+            <th>Bilet No</th>
+            <th>Öncelik</th>
+            <th>Durum</th>
+            <th class="col-wide">Kısa Açıklama</th>
+            <th>Talep Eden</th>
+            <th>SLA</th>
+            <th>Atanan Grup</th>
+            <th class="col-action">İşlem</th>
           </tr>
-        <% end %>
-      </tbody>
+        </thead>
+        <tbody>
+          <% @incidents.each do |incident| %>
+            <tr>
+              <td>
+                <%= link_to incident_path(incident), class: "ticket-number-badge", data: { agent_id: "incident-view" }, aria: { label: "Open incident #{incident.number}" } do %>
+                  <%= incident.number %>
+                <% end %>
+              </td>
+              <td>
+                <% priority_class = case incident.priority
+                                    when "p1_critical" then "badge-p1"
+                                    when "p2_high" then "badge-p2"
+                                    when "p3_moderate" then "badge-p3"
+                                    else "badge-p4"
+                                    end %>
+                <span class="badge <%= priority_class %>">
+                  <%= incident.priority_short_label %>
+                </span>
+              </td>
+              <td>
+                <% state_class = case incident.state
+                                 when "new_ticket" then "badge-new"
+                                 when "in_progress" then "badge-in-progress"
+                                 when "on_hold" then "badge-on-hold"
+                                 when "resolved" then "badge-resolved"
+                                 else "badge-new"
+                                 end %>
+                <span class="badge <%= state_class %>">
+                  <%= incident.state_label.split(" ").first %>
+                </span>
+              </td>
+              <td class="col-wide">
+                <%= link_to incident_path(incident), class: "cell-title", data: { agent_id: "incident-view-description" }, aria: { label: "Open incident #{incident.number}" } do %>
+                  <%= incident.short_description %>
+                <% end %>
+                <span class="cell-subtitle cell-subtitle-row">
+                  <span class="service-pill">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                    <%= incident.service_affected %>
+                  </span>
+                  <span class="cell-subtitle-text"><%= incident.category %> · Açılış <%= l(incident.created_at, format: :short) %></span>
+                </span>
+              </td>
+              <td>
+                <span class="cell-strong"><%= tag.span incident.requested_by, data: { agent_private: true } %></span>
+              </td>
+              <td>
+                <% if incident.resolved? %>
+                  <span class="badge badge-within-sla">✓ Çözüldü</span>
+                <% elsif incident.sla_breached? %>
+                  <span class="badge badge-sla-breached">⚠ İhlal</span>
+                <% else %>
+                  <% rem = incident.sla_time_remaining_seconds %>
+                  <span class="badge badge-within-sla sla-countdown">
+                    ⏱ <%= "%02d:%02d" % [rem / 60, rem % 60] %>
+                  </span>
+                <% end %>
+              </td>
+              <td>
+                <span class="cell-strong"><%= incident.assignment_group %></span>
+                <span class="cell-subtitle"><%= incident.assigned_to %></span>
+              </td>
+              <td class="col-action">
+                <%= link_to incident_path(incident), class: "btn btn-secondary btn-sm" do %>
+                  <span>Detay</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
     </table>
+    </div>
   <% else %>
-    <div style="padding: 3rem 2rem; text-align: center; color: var(--text-muted);">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin-bottom: 0.75rem;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-secondary);">Kayıt Bulunamadı</h3>
-      <p style="font-size: 0.85rem; margin-top: 0.25rem;">Seçilen filtre kriterlerine uygun açık veya geçmiş bilet bulunmuyor.</p>
+    <div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <h3>Kayıt Bulunamadı</h3>
+      <p>Seçilen filtre kriterlerine uygun açık veya geçmiş bilet bulunmuyor.</p>
     </div>
   <% end %>
 </div>
 
-<!-- Alt Bölüm: 100 Puanlık Acı Noktası (Knowledge Base & Incident Memory Bilgilendirmesi) -->
-<div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-  <div style="display: flex; align-items: center; gap: 1rem;">
-    <div style="width: 40px; height: 40px; border-radius: 8px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #4f46e5;">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+<!-- Alt Bölüm: Incident Memory (Knowledge Base) bilgilendirmesi -->
+<div class="info-banner">
+  <div class="info-banner-main">
+    <div class="info-banner-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
     </div>
     <div>
-      <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
-        Agent triage sağlayıcı yapılandırmasını bekliyor
-      </h4>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
+      <h4 class="info-banner-title">Incident Memory · Kaynaklı çözüm önerileri</h4>
+      <p class="info-banner-text">
         Onaylı çözümler embedding tabanlı aranır. Öneriler kaynaklarını gösterir; hiçbir çözüm aksiyonu otomatik uygulanmaz.
       </p>
     </div>
   </div>
 
   <%= link_to root_path(filter: "resolved"), class: "btn btn-secondary btn-sm" do %>
-    <span>Geçmiş Çözülmüş Biletleri İncele (<%= @resolved_count %>)</span>
+    <span>Çözülmüş Biletleri İncele (<%= @resolved_count %>)</span>
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
   <% end %>
 </div>

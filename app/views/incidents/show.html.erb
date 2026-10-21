@@ -1,19 +1,19 @@
-<div style="margin-bottom: 1.25rem;">
-  <%= link_to root_path, style: "font-size: 0.84rem; color: var(--brand-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;" do %>
+<div class="back-link-wrap">
+  <%= link_to root_path, class: "back-link" do %>
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-    <span>← Bilet Listesine Dön</span>
+    <span>Bilet Listesine Dön</span>
   <% end %>
 </div>
 
 <!-- =========================================================================
      Olay başlığı
      ========================================================================= -->
-<div class="enterprise-card" style="margin-bottom: 1.5rem;">
-  <div style="padding: 1.25rem 1.5rem;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.25rem;">
-      <div>
-        <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
-          <span class="ticket-number-badge" style="font-size: 0.95rem; padding: 0.25rem 0.65rem;">
+<div class="enterprise-card section-stack">
+  <div class="card-body">
+    <div class="incident-head">
+      <div class="incident-head-main">
+        <div class="incident-head-badges">
+          <span class="ticket-number-badge ticket-number-badge-lg">
             <%= @incident.number %>
           </span>
 
@@ -23,60 +23,57 @@
                               when "p3_moderate" then "badge-p3"
                               else "badge-p4"
                               end %>
-          <span class="badge <%= priority_class %>" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
+          <span class="badge <%= priority_class %> badge-lg">
             <%= @incident.priority_label %>
           </span>
 
-          <span class="service-pill" style="font-size: 0.8rem; padding: 0.25rem 0.65rem;">
+          <span class="service-pill service-pill-lg">
             <%= @incident.service_affected %>
           </span>
+
           <% if @incident.origin == "simulation" %>
             <span class="status-badge status-on-hold" aria-label="Simulated action">SİMÜLASYON</span>
           <% end %>
 
-          <span style="font-size: 0.78rem; color: var(--text-dim);">
+          <span class="incident-head-meta">
             Açılış: <%= l(@incident.created_at, format: :short) %> · Talep Eden: <strong data-agent-private><%= @incident.requested_by %></strong>
           </span>
         </div>
 
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 0.35rem;">
+        <h1 class="incident-title">
           <%= @incident.short_description %>
         </h1>
-        <p style="color: var(--text-muted); font-size: 0.86rem;">
-          Atanan Grup: <strong style="color: var(--text-secondary);"><%= @incident.assignment_group %></strong> ·
-          Atanan Uzman: <strong style="color: var(--text-secondary);"><%= @incident.assigned_to %></strong>
+        <p class="incident-subtitle">
+          Atanan Grup: <strong><%= @incident.assignment_group %></strong> ·
+          Atanan Uzman: <strong><%= @incident.assigned_to %></strong>
         </p>
       </div>
 
       <!-- SLA zaman kuralı -->
-      <div style="background: var(--bg-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 1rem 1.35rem; min-width: 260px; text-align: right;">
-        <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 700;">
+      <div class="sla-panel">
+        <div class="sla-panel-label">
           Hedef SLA (<%= @incident.priority_short_label %>)
         </div>
 
         <% if @incident.resolved? %>
-          <div style="font-size: 1.35rem; font-weight: 800; color: var(--color-success); margin-top: 0.25rem;">
-            ✓ ÇÖZÜLDÜ
-          </div>
-          <div style="font-size: 0.76rem; color: var(--text-muted);">
+          <div class="sla-panel-value is-success">✓ ÇÖZÜLDÜ</div>
+          <div class="sla-panel-note">
             Kapanış: <%= l(@incident.resolved_at, format: :short) rescue "" %>
           </div>
         <% elsif @incident.sla_breached? %>
-          <div style="font-size: 1.35rem; font-weight: 800; color: var(--color-critical); margin-top: 0.25rem;">
-            ⚠ SLA BREACHED
-          </div>
-          <div style="font-size: 0.76rem; color: var(--color-critical); font-weight: 600;">
+          <div class="sla-panel-value is-critical">⚠ SLA İHLALİ</div>
+          <div class="sla-panel-note is-critical">
             Hedef süre aşıldı (<%= l(@incident.sla_breached_at, format: :short) rescue "" %>)
           </div>
         <% else %>
           <% rem = @incident.sla_time_remaining_seconds %>
-          <div style="font-size: 1.65rem; font-weight: 800; color: <%= rem < 300 ? 'var(--color-critical)' : 'var(--brand-primary)' %>; font-family: var(--font-mono); margin-top: 0.25rem; line-height: 1.1;">
+          <div class="sla-panel-value <%= rem < 300 ? 'is-critical' : 'is-primary' %>">
             <%= "%02d:%02d" % [rem / 60, rem % 60] %>
           </div>
-          <div style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+          <div class="sla-panel-note">
             Kalan Hedef Çözüm Süresi
           </div>
-          <%= button_to check_sla_incident_path(@incident), method: :post, class: "btn btn-secondary btn-sm", style: "width: 100%;", data: { turbo: false } do %>
+          <%= button_to check_sla_incident_path(@incident), method: :post, class: "btn btn-secondary btn-sm btn-block", data: { turbo: false } do %>
             <span>⏱ SLA Kuralını Denetle</span>
           <% end %>
         <% end %>
@@ -107,8 +104,8 @@
     </div>
 
     <!-- Durum aksiyonları -->
-    <div style="padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-      <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ITSM Durum Akışı:</span>
+    <div class="action-bar">
+      <span class="action-bar-label">ITSM Durum Akışı:</span>
 
       <% if @incident.new_ticket? %>
         <%= button_to start_progress_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false, agent_confirm: "Bu incident işleme alınsın mı?" } do %>
@@ -117,12 +114,12 @@
         <% end %>
       <% elsif @incident.in_progress? %>
         <!-- Beklemeye Al Butonu -->
-        <button type="button" onclick="document.getElementById('on-hold-form-box').style.display='block';" class="btn btn-warning btn-sm">
+        <button type="button" onclick="document.getElementById('on-hold-form-box').classList.add('is-open');" class="btn btn-warning btn-sm">
           <span>Beklemeye Al (On Hold)</span>
         </button>
 
         <!-- Çözümleme Modal / Form Tetikleyici -->
-        <button type="button" onclick="document.getElementById('resolve-form-box').style.display='block';" class="btn btn-success btn-sm">
+        <button type="button" onclick="document.getElementById('resolve-form-box').classList.add('is-open');" class="btn btn-success btn-sm">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <span>Bileti Çözümle & Kapat (Resolve)</span>
         </button>
@@ -131,20 +128,20 @@
           <span>Beklemeyi Kaldır & Devam Et (In Progress)</span>
         <% end %>
 
-        <button type="button" onclick="document.getElementById('resolve-form-box').style.display='block';" class="btn btn-success btn-sm">
+        <button type="button" onclick="document.getElementById('resolve-form-box').classList.add('is-open');" class="btn btn-success btn-sm">
           <span>Bileti Çözümle & Kapat (Resolve)</span>
         </button>
       <% else %>
         <% if @kb_candidates.any? { |candidate| candidate.pending? } %>
-          <span class="badge badge-on-hold" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+          <span class="badge badge-on-hold badge-lg">
             Çözüm kaydedildi; Knowledge Base'e eklenmesi insan onayı bekliyor.
           </span>
         <% elsif KnowledgeArticle.exists?(source_incident: @incident) %>
-          <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+          <span class="badge badge-resolved badge-lg">
             ✓ Çözülmüş vaka onaylı Incident Memory kaynağı olarak saklanıyor.
           </span>
         <% else %>
-          <span class="badge badge-resolved" style="font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+          <span class="badge badge-resolved badge-lg">
             Bilet çözüldü; çözüm için Knowledge Base adayı bulunmuyor.
           </span>
         <% end %>
@@ -152,39 +149,39 @@
     </div>
 
     <!-- On Hold Gerekçesi Formu (Gizli/Açılır) -->
-    <div id="on-hold-form-box" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--bg-subtle); border: 1px solid var(--border-medium); border-radius: var(--radius-sm);">
+    <div id="on-hold-form-box" class="inline-panel">
       <%= form_with url: put_on_hold_incident_path(@incident), method: :post, local: true, data: { agent_confirm: "Bu incident beklemeye alınsın mı?" } do |f| %>
-        <div class="form-group" style="margin-bottom: 0.5rem;">
+        <div class="form-group">
           <label class="form-label">Bekletme Gerekçesi (On Hold Reason):</label>
           <input type="text" name="on_hold_reason" class="form-input" placeholder="Örn: 3. parti SAP/Cisco tedarikçi desteği bekleniyor..." required>
         </div>
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-          <button type="button" onclick="document.getElementById('on-hold-form-box').style.display='none';" class="btn btn-secondary btn-sm">İptal</button>
+        <div class="inline-panel-actions">
+          <button type="button" onclick="document.getElementById('on-hold-form-box').classList.remove('is-open');" class="btn btn-secondary btn-sm">İptal</button>
           <%= f.submit "On Hold Olarak Kaydet", class: "btn btn-warning btn-sm" %>
         </div>
       <% end %>
     </div>
 
     <!-- Çözümleme Formu (Gizli/Açılır) -->
-    <div id="resolve-form-box" style="display: none; margin-top: 1rem; padding: 1.25rem; background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: var(--radius-sm);">
-      <h4 style="font-size: 0.95rem; font-weight: 700; color: #166534; margin-bottom: 0.75rem;">
+    <div id="resolve-form-box" class="inline-panel inline-panel-success">
+      <h4 class="inline-panel-title">
         Bileti Çözümleme & Knowledge Base'e Ekleme
       </h4>
       <%= form_with url: resolve_incident_path(@incident), method: :post, local: true, data: { agent_confirm: "Bu incident çözümlenip kapatılsın mı?" } do |f| %>
         <div class="form-group">
-          <label class="form-label" style="color: #166534;">Kök Neden Analizi (Root Cause Analysis):</label>
+          <label class="form-label">Kök Neden Analizi (Root Cause Analysis):</label>
           <input type="text" id="input_root_cause" name="root_cause_analysis" class="form-input" placeholder="Örn: SAP RFC work process havuz sınırı 12'ye ulaştı..." required>
         </div>
         <div class="form-group">
-          <label class="form-label" style="color: #166534;">Uygulanan Çözüm Notları (Resolution Notes):</label>
+          <label class="form-label">Uygulanan Çözüm Notları (Resolution Notes):</label>
           <textarea id="input_resolution_notes" name="resolution_notes" rows="3" class="form-textarea" placeholder="Örn: SM50 work process havuzu 36'ya yükseltildi ve cron kuyruğu güncellendi..." required></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label" style="color: #166534;">Doğrulama Sonucu (Verification):</label>
+          <label class="form-label">Doğrulama Sonucu (Verification):</label>
           <input type="text" name="verification" class="form-input" placeholder="Örn: RFC testleri başarılı, işlem kuyruğu normale döndü..." required>
         </div>
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-          <button type="button" onclick="document.getElementById('resolve-form-box').style.display='none';" class="btn btn-secondary btn-sm">İptal</button>
+        <div class="inline-panel-actions">
+          <button type="button" onclick="document.getElementById('resolve-form-box').classList.remove('is-open');" class="btn btn-secondary btn-sm">İptal</button>
           <%= f.submit "Bileti Çöz & Kapat", class: "btn btn-success btn-sm", data: { agent_confirm: "Bu incident çözümlenip kapatılsın mı?" } %>
         </div>
       <% end %>
@@ -201,27 +198,27 @@
       <span class="status-badge status-on-hold">Triage beklemede — insan kuyruğunda</span>
     <% end %>
   </div>
-  <div style="padding: 1.25rem;">
+  <div class="card-body">
     <% if @triage_attempt&.completed? %>
       <% output = @triage_attempt.output_json %>
-      <dl class="form-grid-2">
+      <dl class="detail-grid">
         <% %w[priority impact urgency category affected_service assignment_group sla_breach_risk].each do |key| %>
           <div>
-            <dt class="form-label"><%= key.humanize %></dt>
+            <dt><%= key.humanize %></dt>
             <dd><%= output[key] %></dd>
           </div>
         <% end %>
         <div>
-          <dt class="form-label">Major incident candidate</dt>
+          <dt>Major incident candidate</dt>
           <dd><%= output.dig("major_incident_candidate", "value") ? "Evet" : "Hayır" %> · <%= number_to_percentage(output.dig("major_incident_candidate", "probability").to_f * 100, precision: 0) %></dd>
         </div>
         <div>
-          <dt class="form-label">Needs human</dt>
+          <dt>Needs human</dt>
           <dd><%= output.dig("needs_human", "value") ? "Evet" : "Hayır" %> · <%= output.dig("needs_human", "reason_code") %> · <%= number_to_percentage(output.dig("needs_human", "probability").to_f * 100, precision: 0) %></dd>
         </div>
       </dl>
-      <p style="margin-top: 0.75rem;"><strong>Gerekçe:</strong> <%= output["rationale"] %></p>
-      <p style="font-size: 0.78rem; color: var(--text-muted);">
+      <p class="provider-note"><strong>Gerekçe:</strong> <%= output["rationale"] %></p>
+      <p class="provider-note">
         Provider: <%= @triage_attempt.provider %> · Model: <%= @triage_attempt.model.presence || "bilinmiyor" %> · Gecikme: <%= @triage_attempt.latency_ms %> ms
       </p>
     <% else %>
@@ -238,7 +235,7 @@
       <% end %>
     <% if @policy_decision&.completed? %>
       <% policy_output = @policy_decision.output_json %>
-      <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
+      <p class="provider-note">
         HITL politikası: <strong><%= policy_output["action"] %></strong> · <%= policy_output["reason_code"] %>
         <% if @handoff %>
           · <%= link_to "Onay kuyruğunda incele", handoffs_path %>
@@ -248,19 +245,23 @@
   </div>
 </section>
 
-<section class="enterprise-card" style="margin-top: 1.25rem;" aria-label="Agent run trace">
+<section class="enterprise-card section-stack" aria-label="Agent run trace">
   <div class="enterprise-card-header">
     <span class="card-title-text">Agent Run Trace</span>
     <span class="card-count-badge"><%= @agent_trace.size %> karar</span>
   </div>
-  <div style="padding: 1.25rem;">
+  <div class="card-body">
     <% if @agent_trace.empty? %>
-      <p>Agent karar izi henüz oluşmadı.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <h3>Agent karar izi henüz oluşmadı</h3>
+        <p>Bu bilet için kaydedilmiş bir agent kararı yok. Triage veya çözüm önerisi çalıştırıldığında iz burada listelenir.</p>
+      </div>
     <% else %>
-      <ol style="padding-left: 1.4rem;">
+      <ol class="trace-list">
         <% @agent_trace.each do |decision| %>
           <% output = decision.output_json || {} %>
-          <li style="margin-bottom: 0.75rem;">
+          <li>
             <strong><%= decision.kind.humanize %></strong>
             <% if decision.kind == "route" %>
               · <%= output["action"] %> (<%= output["reason_code"] %>)
@@ -271,7 +272,7 @@
             <% else %>
               · <%= decision.status %>
             <% end %>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">
+            <div class="trace-meta">
               <%= decision.provider %> / <%= decision.model.presence || "model belirtilmedi" %>
               <% if decision.confidence %> · Güven <%= number_to_percentage(decision.confidence * 100, precision: 0) %><% end %>
               <% if decision.latency_ms %> · <%= decision.latency_ms %> ms<% end %>
@@ -284,34 +285,42 @@
   </div>
 </section>
 
-<section class="enterprise-card" style="margin-top: 1.25rem;">
+<section class="enterprise-card section-stack">
   <div class="enterprise-card-header">
     <span class="card-title-text">Incident Memory · Benzer geçmiş vakalar ve çözüm önerisi</span>
     <%= button_to "Kaynaklı çözüm öner", suggest_resolution_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false } %>
   </div>
-  <div style="padding: 1.25rem;">
+  <div class="card-body">
     <% if @relevance_decision&.completed? %>
-      <p style="font-size: 0.8rem; color: var(--text-muted);">
+      <p class="provider-note">
         Evidence grading: <%= @relevance_decision.provider %> / <%= @relevance_decision.model %> ·
         Confidence <%= number_to_percentage(@relevance_decision.confidence.to_f * 100, precision: 0) %>
       </p>
     <% elsif @relevance_decision&.failed? %>
-      <p style="font-size: 0.8rem; color: var(--text-muted);">Evidence grading failed: <%= @relevance_decision.error_code %></p>
+      <p class="provider-note">Evidence grading failed: <%= @relevance_decision.error_code %></p>
     <% end %>
     <% if @resolution_decision&.failed? %>
-      <p>RAG şu anda kullanılamıyor (<%= @resolution_decision.error_code %>). Otomatik çözüm gösterilmiyor; insan incelemesi gerekli.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <h3>RAG şu anda kullanılamıyor</h3>
+        <p>Hata: <%= @resolution_decision.error_code %>. Otomatik çözüm gösterilmiyor; insan incelemesi gerekli.</p>
+      </div>
     <% elsif @resolution_decision&.output_json&.fetch("status", nil) == "insufficient_evidence" %>
-      <p>Knowledge Base'te yeterli kanıt yok. Bilet insan incelemesinde kalmalı; çözüm uydurulmadı.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <h3>Yeterli kanıt bulunamadı</h3>
+        <p>Knowledge Base'te yeterli kanıt yok. Bilet insan incelemesinde kalmalı; çözüm uydurulmadı.</p>
+      </div>
     <% elsif @resolution_decision&.output_json&.fetch("status", nil) == "suggested" %>
-      <p style="font-size: 0.8rem; color: var(--text-muted);">
+      <p class="provider-note">
         Provider: <%= @resolution_decision.provider %> · Model: <%= @resolution_decision.model %> ·
         Confidence: <%= number_to_percentage(@resolution_decision.confidence.to_f * 100, precision: 0) %>
       </p>
-      <ol style="padding-left: 1.5rem; margin-top: 0.75rem;">
+      <ol class="stack-list">
         <% @resolution_decision.output_json.fetch("steps").each do |step| %>
-          <li style="margin-bottom: 0.6rem;">
+          <li>
             <%= step.fetch("text") %>
-            <span style="font-size: 0.78rem;">
+            <span class="citation-links">
               <% step.fetch("citations").each do |chunk_id| %>
                 <% chunk = @citation_chunks.find { |candidate| candidate.chunk_id == chunk_id } %>
                 <% if chunk %>
@@ -322,25 +331,32 @@
           </li>
         <% end %>
       </ol>
-      <p style="font-size: 0.8rem; color: var(--text-muted);">Öneri; hiçbir üretim aksiyonu uygulanmadı. Çözümü insan gözden geçirmelidir.</p>
+      <p class="provider-note">Öneri; hiçbir üretim aksiyonu uygulanmadı. Çözümü insan gözden geçirmelidir.</p>
     <% else %>
-      <p>Çözüm önerisi henüz istenmedi. Sağlayıcılar veya vektör indeksi hazır değilse durum açıkça beklemede gösterilir.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <h3>Çözüm önerisi henüz istenmedi</h3>
+        <p>Sağlayıcılar veya vektör indeksi hazır değilse durum açıkça beklemede gösterilir.</p>
+      </div>
     <% end %>
   </div>
 </section>
 
 <% pending_candidates = @kb_candidates.select(&:pending?) %>
 <% if pending_candidates.any? %>
-  <section class="enterprise-card" style="margin-top: 1.25rem;">
-    <div class="enterprise-card-header"><span class="card-title-text">İnsan onayı · KB adayları</span></div>
+  <section class="enterprise-card section-stack">
+    <div class="enterprise-card-header">
+      <span class="card-title-text">İnsan onayı · KB adayları</span>
+      <span class="card-count-badge"><%= pending_candidates.size %> aday</span>
+    </div>
     <% pending_candidates.each do |candidate| %>
-      <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-light);">
+      <div class="kb-candidate">
         <p><strong>Kök neden:</strong> <%= candidate.root_cause %></p>
-        <p style="margin-top: 0.4rem;"><strong>Doğrulama:</strong> <%= candidate.verification %></p>
-        <ul style="margin: 0.6rem 0 0.9rem 1.2rem;">
+        <p class="kb-candidate-meta"><strong>Doğrulama:</strong> <%= candidate.verification %></p>
+        <ul class="stack-list">
           <% candidate.resolution_steps.each do |step| %><li><%= step %></li><% end %>
         </ul>
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="inline-panel-actions kb-candidate-actions">
           <%= button_to "Onayla ve KB'ye ekle", approve_kb_candidate_incident_path(@incident, candidate_id: candidate.id), method: :post, class: "btn btn-success btn-sm", data: { turbo: false } %>
           <%= button_to "Reddet", reject_kb_candidate_incident_path(@incident, candidate_id: candidate.id), method: :post, class: "btn btn-secondary btn-sm", data: { turbo: false } %>
         </div>
@@ -352,70 +368,74 @@
 <!-- =========================================================================
      İki kolonlu olay formu ve zaman çizelgesi
      ========================================================================= -->
-<div style="display: grid; grid-template-columns: 1.7fr 1fr; gap: 1.5rem;">
+<div class="split-layout section-stack">
   <!-- Sol Kolon: Bilet Ayrıntıları (Form Alanları) -->
   <div class="enterprise-card">
     <div class="enterprise-card-header">
       <span class="card-title-text">Bilet Ayrıntıları (Incident Form Data)</span>
-      <span style="font-size: 0.78rem; color: var(--text-dim);">SentinelOps Olay Formu</span>
+      <span class="card-subtitle">SentinelOps Olay Formu</span>
     </div>
 
-    <div style="padding: 1.25rem;">
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Bilet No</label>
-          <input type="text" class="form-input" value="<%= @incident.number %>" readonly style="background: var(--bg-subtle); font-family: var(--font-mono); font-weight: 700;">
+    <div class="card-body">
+      <dl class="detail-grid">
+        <div>
+          <dt>Bilet No</dt>
+          <dd class="mono-value"><%= @incident.number %></dd>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Talep Eden (Caller)</label>
-          <input type="text" class="form-input" value="<%= @incident.requested_by %>" readonly style="background: var(--bg-subtle);" data-agent-private>
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Etkilenen Kurumsal Servis</label>
-          <input type="text" class="form-input" value="<%= @incident.service_affected %>" readonly style="background: var(--bg-subtle);">
+        <div>
+          <dt>Talep Eden (Caller)</dt>
+          <dd data-agent-private><%= @incident.requested_by %></dd>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Kategori</label>
-          <input type="text" class="form-input" value="<%= @incident.category %>" readonly style="background: var(--bg-subtle);">
-        </div>
-      </div>
-
-      <div class="form-grid-2">
-        <div class="form-group">
-          <label class="form-label">Öncelik (Priority)</label>
-          <input type="text" class="form-input" value="<%= @incident.priority_label %>" readonly style="background: var(--bg-subtle); font-weight: 600;">
+        <div>
+          <dt>Etkilenen Kurumsal Servis</dt>
+          <dd><%= @incident.service_affected %></dd>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Atanan Destek Grubu</label>
-          <input type="text" class="form-input" value="<%= @incident.assignment_group %>" readonly style="background: var(--bg-subtle);">
+        <div>
+          <dt>Kategori</dt>
+          <dd><%= @incident.category %></dd>
         </div>
-      </div>
+
+        <div>
+          <dt>Öncelik (Priority)</dt>
+          <dd><%= @incident.priority_label %></dd>
+        </div>
+
+        <div>
+          <dt>Atanan Destek Grubu</dt>
+          <dd><%= @incident.assignment_group %></dd>
+        </div>
+
+        <div>
+          <dt>Atanan Uzman</dt>
+          <dd><%= @incident.assigned_to %></dd>
+        </div>
+
+        <div>
+          <dt>Oluşturulma</dt>
+          <dd><%= l(@incident.created_at, format: :short) %></dd>
+        </div>
+      </dl>
 
       <div class="form-group">
         <label class="form-label">Kısa Açıklama (Short Description)</label>
-        <input type="text" class="form-input" value="<%= @incident.short_description %>" readonly style="background: var(--bg-subtle); font-weight: 600;">
+        <input type="text" class="form-input" value="<%= @incident.short_description %>" readonly>
       </div>
 
       <div class="form-group">
         <label class="form-label">Detaylı Açıklama (Description)</label>
-        <textarea rows="4" class="form-textarea" readonly style="background: var(--bg-subtle);"><%= @incident.description %></textarea>
+        <textarea rows="4" class="form-textarea" readonly><%= @incident.description %></textarea>
       </div>
 
       <% if @incident.resolved? %>
-        <div style="background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <h4 style="font-size: 0.88rem; font-weight: 700; color: #166534; margin-bottom: 0.5rem;">
-            ✓ Kapanış & Çözüm Bilgileri (Resolution Information)
-          </h4>
-          <p style="font-size: 0.82rem; color: #14532d; margin-bottom: 0.35rem;">
+        <div class="resolution-panel">
+          <h4>✓ Kapanış & Çözüm Bilgileri (Resolution Information)</h4>
+          <p>
             <strong>Kök Neden:</strong> <%= @incident.root_cause_analysis %>
           </p>
-          <p style="font-size: 0.82rem; color: #14532d; font-family: var(--font-mono); white-space: pre-line;">
+          <p class="resolution-mono">
             <strong>Çözüm Notları:</strong> <%= @incident.resolution_notes || @incident.resolution_steps %>
           </p>
         </div>
@@ -430,27 +450,36 @@
       <span class="card-count-badge"><%= @timeline_events.count %> İşlem</span>
     </div>
 
-    <div style="padding: 1.25rem;">
-      <div style="border-left: 2px solid var(--border-medium); padding-left: 1.25rem; margin-left: 0.5rem;">
-        <% @timeline_events.each do |event| %>
-          <div style="position: relative; margin-bottom: 1.25rem;">
-            <div style="position: absolute; left: -1.7rem; top: 0.15rem; width: 10px; height: 10px; border-radius: 50%; background: <%= event.event_type == 'sla_breached' ? '#dc2626' : (event.event_type == 'resolved' ? '#16a34a' : '#2563eb') %>; border: 2px solid #ffffff; box-shadow: 0 0 0 2px <%= event.event_type == 'sla_breached' ? '#dc2626' : (event.event_type == 'resolved' ? '#16a34a' : '#2563eb') %>;"></div>
+    <div class="card-body">
+      <% if @timeline_events.empty? %>
+        <div class="empty-state">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <h3>Kayıtlı olay akışı yok</h3>
+          <p>Bu bilet için henüz işlem notu veya durum değişikliği kaydedilmemiş.</p>
+        </div>
+      <% else %>
+        <div class="timeline">
+          <% @timeline_events.each do |event| %>
+            <% dot_class = event.event_type == "sla_breached" ? "is-critical" : (event.event_type == "resolved" ? "is-success" : "") %>
+            <div class="timeline-item">
+              <div class="timeline-dot <%= dot_class %>"></div>
 
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.2rem;">
-              <span style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: <%= event.event_type == 'sla_breached' ? '#dc2626' : 'var(--text-secondary)' %>;">
-                <%= event.event_type.titleize %>
-              </span>
-              <span style="font-size: 0.72rem; color: var(--text-dim);">
-                <%= l(event.created_at, format: :short) %>
-              </span>
+              <div class="timeline-meta">
+                <span class="timeline-event-type <%= event.event_type == 'sla_breached' ? 'is-critical' : '' %>">
+                  <%= event.event_type.titleize %>
+                </span>
+                <span class="timeline-timestamp">
+                  <%= l(event.created_at, format: :short) %>
+                </span>
+              </div>
+
+              <p class="timeline-message">
+                <%= event.message %>
+              </p>
             </div>
-
-            <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; background: var(--bg-subtle); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-light);">
-              <%= event.message %>
-            </p>
-          </div>
-        <% end %>
-      </div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 </div>
