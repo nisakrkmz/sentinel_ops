@@ -45,6 +45,7 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 | `WEB_CONCURRENCY` | Puma worker sayısı | Render'da `1` |
 | `RAILS_MAX_THREADS` | Rails/Puma thread sayısı | Render'da `3` |
 | `DATABASE_PATH` | Production SQLite dosya yolu | Render'da `/rails/storage/production.sqlite3` |
+| `NISA_PASSWORD` | Nisa web hesabı parolası; sunucuda tutulur ve en az 12 karakter olmalıdır | Web UI etkinse |
 | `AGENT_TOKEN_PEPPER` | API token HMAC digest'i için secret pepper | Token issue/auth işlemleri kullanılırsa |
 | `DECISION_PROVIDER` | `jev` \| `groq` \| `nvidia` \| `huggingface` | Triage provider kullanılırsa |
 | `DECISION_API_KEY` | Schema-constrained triage provider key'i | LLM JSON provider seçilirse |
@@ -63,6 +64,8 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 | `PAGE_AGENT_MODEL` | Page Agent için seçili model | Allowlist içinde olmalı |
 | `PAGE_AGENT_ALLOWED_MODELS` | Virgülle ayrılmış model allowlist'i | Page Agent copilot etkinleştirilirse |
 | API rate limit | `config/api.yml` — token başına 120 req/60 sn, 1–100 page size | Varsayılan açık |
+
+Web arayüzü `/login` sayfasında Nisa oturumu ister; `NISA_PASSWORD` yoksa veya 12 karakterden kısaysa form devre dışı kalır. REST API ve MCP kendi bearer-token kimlik doğrulamasını kullanır.
 
 `DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Page Agent, bu dört ENV birlikte ayarlı ve seçilen model allowlist içinde ise etkinleşir; aksi halde UI copilot'ı beklemede gösterir, proxy 503 döndürür. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
 

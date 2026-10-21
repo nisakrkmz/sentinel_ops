@@ -2,6 +2,7 @@ require "test_helper"
 
 class KnowledgeArticlesControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as_nisa
     @article = KnowledgeArticle.create!(
       slug: "controller-kb-test",
       title: "Controller KB article",

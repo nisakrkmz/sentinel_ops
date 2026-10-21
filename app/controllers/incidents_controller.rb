@@ -237,7 +237,7 @@ class IncidentsController < ApplicationController
   end
 
   def set_current_actor
-    Current.actor = Actor.demo_ui_operator
+    Current.actor = current_actor
   end
 
   def workflow_notice(result)

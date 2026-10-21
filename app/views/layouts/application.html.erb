@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <%= favicon_link_tag "/favicon.svg", type: "image/svg+xml" %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -19,7 +20,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="<%= current_actor ? 'app-shell' : 'auth-shell' %>">
+    <% if current_actor %>
     <!-- SentinelOps enterprise header -->
     <header class="enterprise-header">
       <!-- Top Level Instance Bar -->
@@ -70,6 +72,13 @@
             <span class="status-badge status-on-hold" title="Configure the server-side Page Agent provider to enable the copilot">
               Page Agent · Provider beklemede
             </span>
+          <% end %>
+          <span class="operator-chip" aria-label="Oturum açan kullanıcı: Nisa">
+            <span class="operator-avatar" aria-hidden="true">N</span>
+            <span>Nisa</span>
+          </span>
+          <%= button_to logout_path, method: :delete, class: "btn btn-secondary btn-sm logout-button" do %>
+            Güvenli Çıkış
           <% end %>
         </div>
       </div>
@@ -142,5 +151,13 @@
         </div>
       </div>
     </footer>
+    <% else %>
+      <main class="auth-container">
+        <% if notice %>
+          <div class="flash-message flash-notice"><%= notice %></div>
+        <% end %>
+        <%= yield %>
+      </main>
+    <% end %>
   </body>
 </html>

@@ -1,6 +1,16 @@
 ENV["RAILS_ENV"] ||= "test"
+ENV["NISA_PASSWORD"] ||= "test-nisa-password-2026"
 require_relative "../config/environment"
 require "rails/test_help"
+
+module NisaLoginTestHelper
+  def sign_in_as_nisa
+    post login_url, params: { username: "Nisa", password: ENV.fetch("NISA_PASSWORD") }
+    assert_redirected_to root_url
+  end
+end
+
+ActionDispatch::IntegrationTest.include(NisaLoginTestHelper)
 
 module ActiveSupport
   class TestCase

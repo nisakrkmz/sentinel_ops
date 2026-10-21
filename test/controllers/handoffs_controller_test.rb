@@ -2,6 +2,7 @@ require "test_helper"
 
 class HandoffsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as_nisa
     @incident = Incident.create!(
       short_description: "VPN pool exhausted",
       service_affected: "Global VPN Gateway",

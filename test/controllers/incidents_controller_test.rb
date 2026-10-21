@@ -2,6 +2,7 @@ require "test_helper"
 
 class IncidentsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    sign_in_as_nisa
     @incident = Incident.create!(
       short_description: "SAP ERP S/4HANA Background Batch Pool Exhaustion",
       service_affected: "SAP ERP",
@@ -45,7 +46,7 @@ class IncidentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Active Directory SSO", new_inc.service_affected
     assert_equal "new_ticket", new_inc.state
     assert_equal "human", new_inc.opened_by_actor.kind
-    assert_equal "Demo UI Operator (unauthenticated)", new_inc.opened_by_actor.name
+    assert_equal "Nisa", new_inc.opened_by_actor.name
     assert_equal new_inc.opened_by_actor_id, new_inc.timeline_events.first.actor_id
     assert_equal "pending", new_inc.triage_status
     assert_equal "failed", new_inc.decisions.triage.first.status

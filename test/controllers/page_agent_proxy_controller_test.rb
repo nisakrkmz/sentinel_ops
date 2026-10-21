@@ -13,6 +13,7 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     ENV["PAGE_AGENT_BASE_URL"] = "https://llm.example.test/v1"
     ENV["PAGE_AGENT_MODEL"] = "approved-model"
     ENV["PAGE_AGENT_ALLOWED_MODELS"] = "approved-model"
+    sign_in_as_nisa
     @headers = { "Origin" => "http://www.example.com" }
     @payload = {
       model: "approved-model",

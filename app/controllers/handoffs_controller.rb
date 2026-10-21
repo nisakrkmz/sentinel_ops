@@ -70,7 +70,7 @@ class HandoffsController < ApplicationController
   private
 
   def set_current_actor
-    Current.actor = Actor.demo_ui_operator
+    Current.actor = current_actor
   end
 
   def set_handoff

@@ -85,7 +85,7 @@ Resolved (Çözüldü)
 
 ## Agent-first temeli — Faz 1
 
-Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ilişkilendirilir; mevcut oturum açma sistemi olmadığından web arayüzündeki kayıtlar **"Demo UI Operator (unauthenticated)"** aktörünü kullanır. Bu demo actor gerçek kullanıcı doğrulaması veya RBAC değildir. Incident `origin`, `triage_status` ve isteğe bağlı unique `idempotency_key` alanlarını taşır.
+Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parolası yalnızca sunucudaki `NISA_PASSWORD` ortam değişkeninden doğrulanır; en az 12 karakter olmalı, repoya veya sohbete yazılmamalıdır. UI üzerinden yapılan kayıt ve onaylar denetim izinde Nisa actor'ına bağlanır. REST API ve MCP kendi scope'lu bearer token kimlik doğrulamasını kullanmaya devam eder.
 
 `ApiToken` ham bearer token'ı saklamaz; HMAC-SHA256 digest tutar, scope'ları sınırlar, kullanım zamanını izler ve iptal/süre sonu denetimi yapar. Token issue/auth çağrılarında `AGENT_TOKEN_PEPPER` sunucu ortamında tanımlı olmalıdır. Şu an bu token modellerini kullanan REST endpoint'i henüz yoktur. `Decision` ve `Handoff` tabloları audit/provenance ve insana devir kayıtları için eklenmiştir; henüz AI sağlayıcısı veya workflow bu kayıtları otomatik oluşturmuyor.
 
@@ -177,7 +177,7 @@ Faz 1'de incident açılışı ve timeline event kayıtları bir `Actor` ile ili
 
 1. **Active Directory / LDAP Canlı Entegrasyonu:** Gerçek bir Microsoft Domain Controller yerine kurumsal SSO Kerberos senkronizasyonu simüle edilmiş ve JWT formatında hata fırlatılmıştır.
 2. **İki Yönlü E-Posta Dönüştürücü (Inbound Email Parsing):** Kullanıcıların e-posta atarak bilet açması veya e-posta yanıtıyla bilet güncellemesi için SMTP/IMAP worker servisi kurulmamış; biletler web formu ve simülasyon motoru ile üretilmektedir.
-3. **Rol Tabanlı Erişim Kontrolü (RBAC):** ServiceNow'daki yüzlerce yetki rolü (admin, itil, itil_admin, ess) yerine tüm bilet aksiyonları hızlı sunum ve değerlendirme amacıyla açık bırakılmıştır. Faz 1'in "Demo UI Operator (unauthenticated)" actor kaydı yalnızca denetim atfıdır; kimlik doğrulama veya yetkilendirme sağlamaz.
+3. **Rol Tabanlı Erişim Kontrolü (RBAC):** Web UI Nisa için tek operatör oturumu ve sunucu tarafında yapılandırılmış parola kullanır; çoklu kullanıcı/rol matrisi veya self-service kayıt akışı yoktur. API/MCP scope'ları web oturumundan bağımsızdır.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
 6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI, README ve G2 ekran görüntüsü eklenen `b831627` commit'inde de başarılı tamamlandı. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
@@ -209,10 +209,15 @@ bundle install
 bin/rails db:prepare
 bin/rails db:seed
 
-# Sunucuyu Başlatın
+# Parolayı terminalde gizli olarak girin; bu değer komut geçmişine yazılmaz.
+read -s -p "Nisa parolası (en az 12 karakter): " NISA_PASSWORD
+printf '\n'
+export NISA_PASSWORD
+
+# Aynı terminal oturumunda sunucuyu başlatın.
 bin/rails server -b 0.0.0.0 -p 3000
 ```
-Tarayıcınızdan `http://localhost:3000` adresine giderek uygulamayı inceleyebilirsiniz.
+Tarayıcınızdan `http://localhost:3000` adresine gidin; **Nisa** kullanıcı adı ve belirlediğiniz parola ile giriş yapın. Render'da `NISA_PASSWORD` değerini servis ayarlarında secret environment variable olarak ekleyin ve yeniden deploy edin. Parolayı repoya veya sohbete koymayın.
 
 ---
 
