@@ -16,7 +16,14 @@ class PageAgentProxy
 
   class ConfigurationError < StandardError; end
   class InvalidRequest < StandardError; end
-  class UpstreamError < StandardError; end
+  class UpstreamError < StandardError
+    attr_reader :status_code
+
+    def initialize(status_code = nil)
+      @status_code = status_code
+      super("Page Agent provider request failed.")
+    end
+  end
   class ResponseTooLarge < StandardError; end
 
   def self.configured?
@@ -29,6 +36,23 @@ class PageAgentProxy
 
   def self.call(payload, http_client: Net::HTTP)
     new(http_client).call(payload)
+  end
+
+  def self.upstream_error_details(status_code)
+    case status_code
+    when 401, 403
+      [ "provider_authentication_failed", "The provider rejected the configured API key or model access. Check the provider key and model permissions." ]
+    when 404
+      [ "provider_model_or_endpoint_not_found", "The provider could not find the configured model or endpoint. Check the model ID and base URL." ]
+    when 429
+      [ "provider_rate_or_quota_limited", "The provider rate limit or quota was reached. Wait briefly and check provider usage limits." ]
+    when 400, 422
+      [ "provider_rejected_request", "The provider rejected the request. Check model support for tool calling and the configured request limits." ]
+    when 500..599
+      [ "provider_temporarily_unavailable", "The provider returned a server error. Wait briefly and try again." ]
+    else
+      [ "provider_request_failed", "The provider returned an unexpected error. Check the server log for its HTTP status." ]
+    end
   end
 
   def initialize(http_client = Net::HTTP)
@@ -151,13 +175,20 @@ class PageAgentProxy
       end
     end
 
-    raise UpstreamError unless status&.between?(200, 299)
+    unless status&.between?(200, 299)
+      Rails.logger.warn("Page Agent provider returned HTTP #{status || 'unknown'}.")
+      raise UpstreamError, status
+    end
 
     parsed_response = JSON.parse(response_body)
-    raise UpstreamError unless parsed_response.is_a?(Hash)
+    unless parsed_response.is_a?(Hash)
+      Rails.logger.warn("Page Agent provider returned an invalid JSON response.")
+      raise UpstreamError
+    end
 
     Result.new(status: status, body: parsed_response)
   rescue JSON::ParserError
+    Rails.logger.warn("Page Agent provider returned invalid JSON.")
     raise UpstreamError
   rescue Net::OpenTimeout, Net::ReadTimeout, Net::WriteTimeout, Timeout::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError, IOError => error
     Rails.logger.warn("Page Agent provider request failed (#{error.class}).")

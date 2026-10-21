@@ -94,4 +94,27 @@ class PageAgentProxyTest < ActiveSupport::TestCase
     assert_not PageAgentProxy.configured?
     assert_nil PageAgentProxy.public_model
   end
+
+  test "preserves the provider HTTP status without exposing its response body" do
+    fake_http = FakeHttpClient.new(FakeResponse.new("429", '{"error":{"message":"private provider detail"}}'))
+
+    error = assert_raises(PageAgentProxy::UpstreamError) do
+      PageAgentProxy.call(
+        { "model" => "approved-model", "messages" => [ { "role" => "user", "content" => "Hello" } ] },
+        http_client: fake_http
+      )
+    end
+
+    assert_equal 429, error.status_code
+    refute_includes error.message, "private provider detail"
+  end
+
+  test "maps provider HTTP failures to safe actionable diagnostics" do
+    assert_equal "provider_authentication_failed", PageAgentProxy.upstream_error_details(401).first
+    assert_equal "provider_model_or_endpoint_not_found", PageAgentProxy.upstream_error_details(404).first
+    assert_equal "provider_rate_or_quota_limited", PageAgentProxy.upstream_error_details(429).first
+    assert_equal "provider_rejected_request", PageAgentProxy.upstream_error_details(400).first
+    assert_equal "provider_temporarily_unavailable", PageAgentProxy.upstream_error_details(503).first
+    assert_match(/tool calling/, PageAgentProxy.upstream_error_details(400).last)
+  end
 end

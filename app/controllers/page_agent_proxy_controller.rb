@@ -23,7 +23,9 @@ class PageAgentProxyController < ApplicationController
     render_error("invalid_request", :bad_request)
   rescue PageAgentProxy::ConfigurationError
     render_error("provider_not_configured", :service_unavailable)
-  rescue PageAgentProxy::ResponseTooLarge, PageAgentProxy::UpstreamError
+  rescue PageAgentProxy::UpstreamError => error
+    render_upstream_error(error.status_code)
+  rescue PageAgentProxy::ResponseTooLarge
     render_error("provider_unavailable", :bad_gateway)
   end
 
@@ -51,5 +53,17 @@ class PageAgentProxyController < ApplicationController
 
   def render_error(code, status)
     render json: { error: { code: code, message: "Page Agent request could not be completed." } }, status: status
+  end
+
+  def render_upstream_error(status_code)
+    code, message = PageAgentProxy.upstream_error_details(status_code)
+
+    render json: {
+      error: {
+        code: code,
+        message: message,
+        upstream_status: status_code
+      }
+    }, status: :bad_gateway
   end
 end

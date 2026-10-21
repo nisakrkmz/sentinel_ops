@@ -56,13 +56,20 @@ async function proxyFetch(input, init = {}) {
   headers.set("Content-Type", "application/json")
   headers.set("X-CSRF-Token", token)
 
-  return fetch(new URL("/page-agent/v1/chat/completions", window.location.origin), {
+  const response = await fetch(new URL("/page-agent/v1/chat/completions", window.location.origin), {
     method: "POST",
     headers,
     credentials: "same-origin",
     body: JSON.stringify(sanitizePayload(payload, maskedValues())),
     signal: request.signal,
   })
+
+  if (!response.ok) {
+    const result = await response.clone().json().catch(() => null)
+    throw new Error(result?.error?.message || `Page Agent proxy request failed (HTTP ${response.status}).`)
+  }
+
+  return response
 }
 
 function pageAgentInstructions() {
