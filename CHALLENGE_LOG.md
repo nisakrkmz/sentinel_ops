@@ -112,9 +112,9 @@ Süreleri **ölçülen** değerlerle doldur; tahmin yazma.
 | 2026-10-21 | Page Agent incident creation | Ölçülemedi; aktif çalışma aralıklarını güvenilir biçimde ayıran kayıt yok | Nisa dolduracak | `2b4b8dc` | Page Agent yeni incident formunu doldurup tarayıcı onayıyla gönderebilir; diğer değişiklikler kapalı; 109 test, 615 assertion |
 | 2026-10-21 | Page Agent provider hata teşhisi | Ölçülemedi; bu düzenleme için aktif süreyi güvenilir biçimde ayıracak zaman kaydı yok | Nisa dolduracak | `d63d89a` | Yerel logda tekrarlanan proxy 502 / provider HTTP 400 doğrulandı; güvenli açıklama ve request logunda Page Agent messages/content/tools filtrelemesi; 111 test, 626 assertion |
 | 2026-10-21 | Page Agent Kurumsal Simülasyon izni | Ölçülemedi; aktif süreyi güvenilir biçimde ayıracak zaman kaydı yok | Nisa dolduracak | Uygulama commit'i eklenecek | SAP demo simülasyon butonu Agent allowlist'ine eklendi; açık talep + tarayıcı onayı zorunlu; 111 test, 628 assertion |
-| 2026-10-22 | Faz 2 live smoke kanıt altyapısı | Ölçülemedi; bu oturumda aktif araç aralıklarını güvenilir biçimde toplamaya yetecek zaman kaydı alınmadı | Nisa dolduracak | [`4d447a4`](https://github.com/nisakrkmz/sentinel_ops/commit/4d447a4) | `bin/live_smoke` ve testleri eklendi, docs güncellendi; gerçek provider/live servis kanıtı alınamadı |
+| 2026-10-22 | Faz 2 live smoke kanıt altyapısı | Ölçülemedi; bu oturumda aktif araç aralıklarını güvenilir biçimde toplamaya yetecek zaman kaydı alınmadı | ≈ 1,5 saat (Nisa bildirimi) | [`4d447a4`](https://github.com/nisakrkmz/sentinel_ops/commit/4d447a4) | `bin/live_smoke` ve testleri eklendi, docs güncellendi; gerçek provider/live servis kanıtı alınamadı |
 
-**Toplam:** Ölçülebilen Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2–6 ölçülemedi · insan süresi Nisa dolduracak · oran insan süresi girilince hesaplanacak
+**Toplam:** Ölçülebilen Faz 0–1 agent süresi yaklaşık 28 dk 41 sn (Faz 0 takip kayıtlarında yaklaşık değerler mevcut) · Faz 2–6 ve bu oturum agent süresi ölçülemedi · bu oturum insan süresi ≈ 1,5 saat (önceki oturumların süresi bilinmiyor) · oran hesaplanamadı
 
 **Planlanan tahminler (gerçekleşenle karşılaştırmak için):**
 
