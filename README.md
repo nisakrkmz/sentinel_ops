@@ -99,6 +99,7 @@ Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parola
 - Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
 - Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Faz 3 Incident Memory/RAG akışı eklendi; gerçek embedding/LLM sağlayıcısı yapılandırılmadan indeksleme ve canlı öneri beklemededir.
 - `ruby bin/eval_triage` 40 etiketli TR/EN örnekte yalnızca baseline'ı çalıştırır. Gerçek model karşılaştırması açıkça `EVAL_LIVE=1 ruby bin/eval_triage` ve gerçek provider config gerektirir; anahtarsız eval model metriği uydurmaz. Güncel rapor: [`eval/RESULTS.md`](eval/RESULTS.md).
+- `bin/live_smoke`, gerçek triage provider'ına tek bir sentetik örnek gönderir; incident'i veritabanına kaydetmeden şema doğrulamalı sonucu `eval/live_runs/` altına yazar. `DECISION_PROVIDER`, `DECISION_API_KEY`, `DECISION_MODEL` ve HTTPS `DECISION_BASE_URL` sunucu ortamında tanımlı olmalıdır. Provider hatasında hata kodu kaydedilir ve komut non-zero döner.
 
 ## Incident Memory / RAG — Faz 3
 

@@ -21,9 +21,9 @@ bin/rails db:seed
 bin/rails server -b 0.0.0.0 -p 3000
 bin/rails test
 ruby bin/eval_triage  # keyword baseline; gerçek provider kıyası için EVAL_LIVE=1
+bin/live_smoke        # gerçek triage çağrısı; DECISION_* gerekir, JSON eval/live_runs/ içine yazılır
 bin/index_knowledge  # onaylı KB parçalarını embedding modeliyle indeksle
 bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
-bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 ```
 
 ## Deploy (Render)
@@ -34,7 +34,7 @@ bin/live_smoke        # gerçek sağlayıcı duman testi (henüz eklenmedi)
 - Başlangıçta `bin/docker-entrypoint`, server komutuyla başlatıldığında `bundle exec rails db:prepare` ve `bundle exec rails db:seed` çalıştırır.
 - Sağlık kontrolü: Rails'in varsayılan `/up` rotası (`config/routes.rb`). `/healthz` rotası mevcut değil.
 - Not: Render ücretsiz katmanında servis boşta uyuyabilir. Sunumdan önce canlı URL'yi aç ve ısıt.
-- 2026-10-19 oturum kontrolünde canlı URL 503 döndürdü; canlı demo ve Render deploy durumu bu kontrolle doğrulanamadı.
+- 2026-10-19 kontrolünde canlı URL 503 döndürdü. 2026-10-22'de `/`, `/up` ve `/healthz` istekleri 30 saniyede yanıt vermedi (HTTP 000); canlı demo ve mevcut Render deploy durumu doğrulanamadı.
 - Render tanımında kalıcı disk yok; production SQLite kalıcılığı garanti edilmemiştir. Canlı doğrulama için her fazdan sonra deploy'u bekle ve demo adımlarını çalıştır.
 
 ## Ortam değişkenleri (anahtarlar yalnızca sunucuda)
@@ -106,6 +106,7 @@ Web arayüzü `/login` sayfasında Nisa oturumu ister; `NISA_PASSWORD` yoksa vey
 - Faz 2 triage provider'ı ve Faz 3 RAG adapter'ları generic HTTPS OpenAI-compatible endpoint bekler; gerçek provider/model uyumluluğunu secret ile canlı çağrı yapmadan varsayma.
 - Faz 3 KB veri modeli yapılandırılmış 4-chunk makaleler ve SQLite JSON embedding'leri kullanır. 4 seed resolved incident + 20 açıkça `synthetic_seed` olarak işaretli makale vardır. Embed sağlayıcısı yoksa arama/çözüm önerisi disabled/pending kalır.
 - `bin/index_knowledge` onaylı makaleleri mevcut embedding provider/model ile indeksler; `--force` tüm vektörleri yeniler. `bin/eval_rag` varsayılan olarak canlı model ölçümü yapmaz; gerçek çağrı için `EVAL_RAG_LIVE=1` gerekir.
+- `bin/live_smoke` tek bir sentetik incident örneğini gerçek triage sağlayıcısına gönderir, veritabanına incident yazmaz ve sonucu API anahtarı/ticket metni olmadan `eval/live_runs/` altına JSON olarak kaydeder. Sağlayıcı yapılandırılmamışsa hata kodlu kayıt üretip non-zero ile çıkar.
 - Doğrudan kullanıcıya görünen `/healthz` beklenmemeli; mevcut sağlık endpoint'i `/up`'tır.
 
 ## Mimari kuralları

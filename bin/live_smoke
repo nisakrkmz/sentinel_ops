@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/boot"
+require_relative "../config/environment"
+require "json"
+
+report, report_path = Triage::LiveSmoke.call
+puts "Wrote #{report_path.relative_path_from(Rails.root)} (provider status: #{report.fetch('status')})"
+exit(report.fetch("status") == "completed" ? 0 : 1)
