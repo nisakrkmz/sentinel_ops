@@ -47,15 +47,15 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 | `DATABASE_PATH` | Production SQLite dosya yolu | Render'da `/rails/storage/production.sqlite3` |
 | `NISA_PASSWORD` | Nisa web hesabı parolası; sunucuda tutulur ve en az 12 karakter olmalıdır | Web UI etkinse |
 | `AGENT_TOKEN_PEPPER` | API token HMAC digest'i için secret pepper | Token issue/auth işlemleri kullanılırsa |
-| `DECISION_PROVIDER` | `jev` \| `groq` \| `nvidia` \| `huggingface` | Triage provider kullanılırsa |
+| `DECISION_PROVIDER` | `jev` \| `groq` \| `nvidia` \| `huggingface` \| `gemini` | Triage provider kullanılırsa |
 | `DECISION_API_KEY` | Schema-constrained triage provider key'i | LLM JSON provider seçilirse |
 | `DECISION_MODEL` | Triage model adı | LLM JSON provider seçilirse |
 | `DECISION_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | LLM JSON provider seçilirse |
-| `LLM_PROVIDER` | `groq` \| `nvidia` \| `huggingface` | Kaynaklı resolution üretimi |
+| `LLM_PROVIDER` | `groq` \| `nvidia` \| `huggingface` \| `gemini` | Kaynaklı resolution üretimi |
 | `LLM_API_KEY` | System 2 JSON chat anahtarı | Resolution sağlayıcısı seçilirse |
 | `LLM_MODEL` | System 2 model adı | Resolution sağlayıcısı seçilirse |
 | `LLM_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | Resolution sağlayıcısı seçilirse |
-| `EMBEDDING_PROVIDER` | `groq` \| `nvidia` \| `huggingface` | Semantik KB araması |
+| `EMBEDDING_PROVIDER` | `groq` \| `nvidia` \| `huggingface` \| `gemini` | Semantik KB araması |
 | `EMBEDDING_API_KEY` | Embedding sağlayıcısı anahtarı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_MODEL` | Çok dilli embedding model adı | Embedding sağlayıcısı seçilirse |
 | `EMBEDDING_BASE_URL` | HTTPS OpenAI-compatible embeddings endpoint'i | Embedding sağlayıcısı seçilirse |

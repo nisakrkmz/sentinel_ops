@@ -1,7 +1,7 @@
 module Triage
   module DecisionProviders
     class Factory
-      SUPPORTED_PROVIDERS = %w[groq nvidia huggingface].freeze
+      SUPPORTED_PROVIDERS = %w[groq nvidia huggingface gemini].freeze
 
       def self.build
         provider = ENV["DECISION_PROVIDER"].to_s

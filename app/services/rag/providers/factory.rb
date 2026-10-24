@@ -1,7 +1,7 @@
 module Rag
   module Providers
     class Factory
-      SUPPORTED_PROVIDERS = %w[groq nvidia huggingface].freeze
+      SUPPORTED_PROVIDERS = %w[groq nvidia huggingface gemini].freeze
 
       def self.embedding
         provider = ENV["EMBEDDING_PROVIDER"].to_s

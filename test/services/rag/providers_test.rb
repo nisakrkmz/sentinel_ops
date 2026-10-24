@@ -140,4 +140,40 @@ class RagProvidersTest < ActiveSupport::TestCase
     end
     assert_equal "invalid_embedding_configuration", error.code
   end
+
+  test "embedding provider supports responses without index fields or fallback to per-item embedding" do
+    body_single_first = { data: [ { embedding: [ 0.1, 0.2 ] } ] }.to_json
+    body_single_second = { data: [ { embedding: [ 0.3, 0.4 ] } ] }.to_json
+
+    # Initial batch returns single combined or index-less response, then falls back to per-item
+    with_http_responses([
+      FakeResponse.new(code: "200", body: body_single_first),
+      FakeResponse.new(code: "200", body: body_single_first),
+      FakeResponse.new(code: "200", body: body_single_second)
+    ]) do |http|
+      result = embedding_provider.embed_many([ "first", "second" ])
+      assert_equal [ [ 0.1, 0.2 ], [ 0.3, 0.4 ] ], result
+    end
+  end
+
+  test "factory supports gemini provider" do
+    env_backup = {
+      "EMBEDDING_PROVIDER" => ENV["EMBEDDING_PROVIDER"],
+      "EMBEDDING_API_KEY" => ENV["EMBEDDING_API_KEY"],
+      "EMBEDDING_MODEL" => ENV["EMBEDDING_MODEL"],
+      "EMBEDDING_BASE_URL" => ENV["EMBEDDING_BASE_URL"]
+    }
+    begin
+      ENV["EMBEDDING_PROVIDER"] = "gemini"
+      ENV["EMBEDDING_API_KEY"] = "gemini-key"
+      ENV["EMBEDDING_MODEL"] = "gemini-embedding-001"
+      ENV["EMBEDDING_BASE_URL"] = "https://generativelanguage.googleapis.com/v1beta/openai/embeddings"
+
+      provider = Rag::Providers::Factory.embedding
+      assert provider.configured?
+      assert_equal "gemini", provider.provider
+    ensure
+      env_backup.each { |k, v| ENV[k] = v }
+    end
+  end
 end

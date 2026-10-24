@@ -38,7 +38,17 @@ module Rag
           attempts += 1
           response = post(uri, { model: @model, input: texts }, deadline)
           data = JSON.parse(response).fetch("data")
-          vectors = data.sort_by { |item| item.fetch("index") }.map { |item| item.fetch("embedding") }
+          vectors = if data.first&.key?("index")
+            data.sort_by { |item| item.fetch("index") }.map { |item| item.fetch("embedding") }
+          else
+            data.map { |item| item.fetch("embedding") }
+          end
+          if texts.length > 1 && vectors.length != texts.length
+            vectors = texts.map do |text|
+              single_resp = post(uri, { model: @model, input: text }, deadline)
+              JSON.parse(single_resp).fetch("data").first.fetch("embedding")
+            end
+          end
           valid = vectors.length == texts.length && vectors.all? do |vector|
             vector.is_a?(Array) && vector.any? && vector.all? { |value| value.is_a?(Numeric) && value.finite? }
           end

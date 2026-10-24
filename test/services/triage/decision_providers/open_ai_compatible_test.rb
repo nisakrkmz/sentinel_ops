@@ -153,4 +153,25 @@ class OpenAiCompatibleTriageProviderTest < ActiveSupport::TestCase
     error = assert_raises(Triage::ProviderError) { insecure.call(incident("VPN access failure")) }
     assert_equal "invalid_provider_configuration", error.code
   end
+
+  test "factory supports gemini provider" do
+    env_backup = {
+      "DECISION_PROVIDER" => ENV["DECISION_PROVIDER"],
+      "DECISION_API_KEY" => ENV["DECISION_API_KEY"],
+      "DECISION_MODEL" => ENV["DECISION_MODEL"],
+      "DECISION_BASE_URL" => ENV["DECISION_BASE_URL"]
+    }
+    begin
+      ENV["DECISION_PROVIDER"] = "gemini"
+      ENV["DECISION_API_KEY"] = "gemini-key"
+      ENV["DECISION_MODEL"] = "gemini-2.5-flash"
+      ENV["DECISION_BASE_URL"] = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+
+      provider = Triage::DecisionProviders::Factory.build
+      assert provider.configured?
+      assert_equal "gemini", provider.provider
+    ensure
+      env_backup.each { |k, v| ENV[k] = v }
+    end
+  end
 end

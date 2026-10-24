@@ -6,6 +6,17 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+# Load local .env file if present (git-ignored)
+env_file = File.expand_path("../.env", __dir__)
+if File.exist?(env_file)
+  File.foreach(env_file) do |line|
+    line = line.strip
+    next if line.empty? || line.start_with?("#")
+    k, v = line.split("=", 2)
+    ENV[k.strip] ||= v.strip.sub(/\A["'](.*)["']\z/, '\1') if k && v
+  end
+end
+
 module SentinelOps
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.

@@ -93,7 +93,7 @@ Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parola
 
 ## Typed incident triage — Faz 2
 
-- `DECISION_PROVIDER=groq|nvidia|huggingface` ile OpenAI-compatible JSON Schema triage adapter'ı seçilir. Sunucu ortamında `DECISION_API_KEY`, `DECISION_MODEL` ve tam HTTPS `DECISION_BASE_URL` verilmelidir. İstek toplam 8 saniyeyi aşmayacak şekilde sınırlandırılır ve en fazla bir retry yapılır.
+- `DECISION_PROVIDER=groq|nvidia|huggingface|gemini` ile OpenAI-compatible JSON Schema triage adapter'ı seçilir. Sunucu ortamında `DECISION_API_KEY`, `DECISION_MODEL` ve tam HTTPS `DECISION_BASE_URL` verilmelidir. İstek toplam 8 saniyeyi aşmayacak şekilde sınırlandırılır ve en fazla bir retry yapılır.
 - Jev protokolü/payload resmi dokümanla doğrulanmadığından `DECISION_PROVIDER=jev` dürüstçe beklemede kalır; Jev kullanıldığı iddia edilmez.
 - Provider yoksa/başarısızsa kayıt yine oluşur, `triage_status=pending` kalır ve başarısız deneme hata koduyla `decisions` tablosuna audit edilir; sahte öncelik/cevap üretilmez.
 - Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
