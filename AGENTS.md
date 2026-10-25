@@ -29,7 +29,8 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 ## Deploy (Render)
 
 - Servis türü ve yapılandırma dosyası: Render `web`, Docker; `render.yaml` → `Dockerfile`, ücretsiz plan, Frankfurt.
-- Deploy tetikleyicisi: yapılandırma deposunda belirtilmiyor; Render panelindeki otomatik/manual deploy ayarı doğrulanmadı.
+- Deploy tetikleyicisi: Render panelinde Settings → Deploy → **Auto-Deploy** (önerilen: *After CI Checks Pass*). 25 Ekim 2026'da `main`'e push deploy tetiklemedi; deploy panelden **Manual Deploy → Deploy latest commit** ile yapıldı. Push sonrası Events sekmesinde deploy başlamadıysa elle tetikle.
+- Son canlı sürüm: `7df9099` (25 Ekim 2026), `/healthz` ile doğrulandı.
 - Build komutu: `Dockerfile` ile imaj oluşturma. Start komutu: `bundle exec rails server` (Dockerfile `CMD`; varsayılan port 80).
 - Başlangıçta `bin/docker-entrypoint`, server komutuyla başlatıldığında `bundle exec rails db:prepare` ve `bundle exec rails db:seed` çalıştırır; `EMBEDDING_PROVIDER` tanımlıysa arka planda `bin/index_knowledge` ile KB indeksini yeniden kurar (disk kalıcı olmadığı için her açılışta gerekir; başarısız olursa açılışı bozmaz).
 - Sağlık kontrolü: `/healthz` (public JSON: DB durumu, sağlayıcıların yapılandırılıp yapılandırılmadığı ve model adı, KB indeks sayısı; anahtar/endpoint içermez) ve Rails'in `/up` rotası.

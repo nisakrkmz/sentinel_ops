@@ -64,7 +64,7 @@
 - **Jev ile canlı çağrı yok.** Adapter yazıldı ve testlendi; canlı demoda bilinçli olarak kullanılmıyor (bkz. Karar).
 - **Agent'ın REST API/MCP üzerinden bilet açması canlıda gösterilmedi.** API testlerle doğrulandı. Canlıda token için Render'da `AGENT_TOKEN_PEPPER` gerekiyor; canlı demodaki agent kaynaklı bilet Kurumsal Simülasyon üzerinden açılıyor.
 - **Render'ın diski kalıcı değil.** Her deploy'da veritabanı sıfırlanır; demo verisi ve demo hesabı her açılışta yeniden oluşur.
-- **Canlı doğrulama:** Bu bölüm yazılırken Hafta 2 kodu henüz Render'a deploy edilmemişti; deploy sonrası canlı demo adımları doğrulanacak.
+- **Canlı deploy yapıldı (25 Ekim 2026, commit `7df9099`):** `/healthz` → DB ok, triage/RAG/Page Agent sağlayıcıları Gemini'de yapılandırılmış, KB 24/24 indeksli; Render logunda `Indexed 96 chunks using gemini/gemini-embedding-001`. GitHub Actions CI #19 yeşil. Canlı demo adımlarının tamamı tarayıcıda ayrıca kayıt altına alınmadı.
 
 ## Zaman
 

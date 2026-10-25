@@ -7,7 +7,7 @@
 ![Rails Version](https://img.shields.io/badge/rails-8.1.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-> **Canlı Uygulama URL:** [https://sentinel-ops-k0km.onrender.com](https://sentinel-ops-k0km.onrender.com) — Render deploy'u `23aa422` commit'inde başarılı; 17 Ekim 2026'da HTTP 200 ile kontrol edildi.
+> **Canlı Uygulama URL:** [https://sentinel-ops-k0km.onrender.com](https://sentinel-ops-k0km.onrender.com) — Hafta 2 sürümü (`7df9099`) 25 Ekim 2026'da Render'a deploy edildi; [`/healthz`](https://sentinel-ops-k0km.onrender.com/healthz) ile doğrulandı. Ayrıntı: [Canlı deploy (Render)](#-canlı-deploy-render).
 >
 > **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)
 >
@@ -56,7 +56,7 @@ Fortune'un 2026 listesi şirketleri **gelire** göre sıralar; değerleme ve Saa
 
 ## 🫀 Aort Dilimi: Uçtan Uca Olay Akışı
 
-SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını uygular. Render'daki `23aa422` deploy'u başarılıdır ve uygulama URL'si HTTP 200 ile doğrulanmıştır.
+SentinelOps canlıda **ITSM Olay Yönetimi (Incident Management)** akışını uygular. Güncel canlı sürüm ve doğrulama için [Canlı deploy (Render)](#-canlı-deploy-render) bölümüne bakın.
 
 ### 1. Durum Akışı (State Workflow)
 
@@ -191,10 +191,33 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 3. **Rol Tabanlı Erişim Kontrolü (RBAC):** Web UI DB'ye bağlı çoklu operatör hesabı ve self-service kayıt destekler, ancak rol matrisi yoktur; her operatör aynı yetkilere sahiptir. API/MCP scope'ları web oturumundan bağımsızdır.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
-6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI, README ve G2 ekran görüntüsü eklenen `b831627` commit'inde de başarılı tamamlandı. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
+6. **Canlı deploy ve CI kanıtı:** Hafta 2 sürümü `7df9099` 25 Ekim 2026'da Render'a deploy edildi ve `/healthz` ile doğrulandı; aynı commit'te GitHub Actions CI (#19) yeşil. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı 50 saniyeye kadar gecikebilir.
 7. **Kullanıcı yorumu bağlantısı:** G2 sayfa 9 bağlantısında yorum, kullanıcının paylaştığı ekran görüntüsünde doğrulandı; sayfada yazar adı yerine “Current User” yazıyor ve yoruma özgü permalink görünmüyor. G2 otomatik erişime 403 döndürdüğünden sunumda sayfa 9 bağlantısını ve bu sınırlamayı birlikte belirtin.
 8. **Kalıcı veritabanı diski:** Render yapılandırması SQLite kullanıyor ve kalıcı disk tanımlamıyor; yeniden deploy/uyku sonrası demo kayıtlarının korunacağı garanti edilmez.
 9. **Saat dilimi:** Sunucu UTC saatiyle çalışır; arayüzdeki zamanlar Türkiye saatinden (UTC+3) 3 saat geride görünebilir.
+
+---
+
+## 🚀 Canlı deploy (Render)
+
+- **URL:** https://sentinel-ops-k0km.onrender.com · **Sağlık:** [`/healthz`](https://sentinel-ops-k0km.onrender.com/healthz)
+- **Servis:** Render Web Service, Docker runtime, ücretsiz plan, Frankfurt. Tanım `render.yaml` (Blueprint) → `Dockerfile`.
+- **Build:** `Dockerfile` gem'leri kurar, bootsnap ve asset'leri derler. **Start:** `bundle exec rails server`; Render portu `PORT` ile verir.
+- **Açılışta (`bin/docker-entrypoint`):** `rails db:prepare` (migration'lar) → `rails db:seed` (6 demo bileti, 24 KB makalesi, demo operatör hesabı) → `EMBEDDING_PROVIDER` tanımlıysa arka planda `bin/index_knowledge` (96 parça Gemini embedding ile yeniden indekslenir, yaklaşık 20 sn).
+- **Ortam değişkenleri:** Render panelinde → Environment. Sağlayıcılar için `DECISION_*`, `LLM_*`, `EMBEDDING_*`, `PAGE_AGENT_*` (tam liste ve açıklamalar: [`AGENTS.md`](AGENTS.md#ortam-değişkenleri-anahtarlar-yalnızca-sunucuda)). Anahtarlar repoda değil, yalnızca Render panelinde durur.
+- **Deploy tetikleme:** Render panelinde **Auto-Deploy** ayarı (önerilen: *After CI Checks Pass*: `main`'e push'tan sonra GitHub Actions yeşilse deploy eder). Elle deploy: **Manual Deploy → Deploy latest commit**.
+- **Kalıcılık:** Ücretsiz planda kalıcı disk yok. Her deploy/yeniden başlatmada SQLite sıfırlanır; seed ve KB indeksi otomatik yeniden oluşur, kayıt olunan hesaplar silinir.
+
+**Son canlı doğrulama (25 Ekim 2026, commit `7df9099`):**
+
+```json
+{"status":"ok","database":"ok",
+ "providers":{"decision":"gemini:gemini-flash-lite-latest","embedding":"gemini:gemini-embedding-001",
+              "resolution":"gemini:gemini-flash-lite-latest","page_agent":"configured"},
+ "knowledge_base":{"approved_articles":24,"indexed_articles":24}}
+```
+
+Render logu: `Demo operatör hesabı oluşturuldu: nisa@sentinelops.demo`, `Indexed 96 chunks using gemini/gemini-embedding-001`, `Your service is live`.
 
 ---
 
