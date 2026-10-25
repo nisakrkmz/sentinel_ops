@@ -102,6 +102,7 @@ module Triage
         request.body = JSON.generate(
           model: @model,
           temperature: 0,
+          **(@provider.to_s == "gemini" ? { reasoning_effort: "none" } : {}),
           response_format: {
             type: "json_schema",
             json_schema: {
