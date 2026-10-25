@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_140000) do
   create_table "actors", force: :cascade do |t|
     t.string "kind", null: false
     t.string "name", null: false
@@ -180,6 +180,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_160000) do
     t.index ["incident_id"], name: "index_timeline_events_on_incident_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "name", null: false
+    t.string "password_digest", null: false
+    t.integer "actor_id", null: false
+    t.datetime "last_sign_in_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_users_on_actor_id", unique: true
+    t.index ["email"], name: "index_users_on_email", unique: true
+  end
+
   add_foreign_key "api_tokens", "actors"
   add_foreign_key "decisions", "actors"
   add_foreign_key "decisions", "incidents"
@@ -195,4 +207,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_160000) do
   add_foreign_key "knowledge_chunks", "knowledge_articles"
   add_foreign_key "timeline_events", "actors"
   add_foreign_key "timeline_events", "incidents"
+  add_foreign_key "users", "actors"
 end

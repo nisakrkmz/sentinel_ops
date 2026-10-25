@@ -7,6 +7,7 @@ class Actor < ApplicationRecord
   has_many :outgoing_handoffs, class_name: "Handoff", foreign_key: :from_actor_id, dependent: :restrict_with_error
   has_many :resolved_handoffs, class_name: "Handoff", foreign_key: :resolved_by_id, dependent: :nullify
   has_many :timeline_events, dependent: :restrict_with_error
+  has_one :user, dependent: :restrict_with_error
 
   validates :kind, presence: true
   validates :name, presence: true

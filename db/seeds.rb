@@ -160,3 +160,11 @@ YAML.safe_load_file(Rails.root.join("config/knowledge_base.yml")).each do |entry
 end
 
 puts "Incident Memory: #{KnowledgeArticle.count} approved articles, #{KnowledgeChunk.count} structured chunks (synthetic seeds are labeled)."
+
+# Demo operatör hesabı (DB'de PBKDF2 hash'li). Herkese açık demo instance içindir;
+# giriş ekranında gösterilir. Gerçek kullanıcılar /signup ile kendi hesabını açar.
+demo_operator = User.demo_operator
+if demo_operator && !User.exists?(email: demo_operator.fetch(:email))
+  User.create!(name: demo_operator.fetch(:name), email: demo_operator.fetch(:email), password: demo_operator.fetch(:password))
+  puts "Demo operatör hesabı oluşturuldu: #{demo_operator.fetch(:email)}"
+end

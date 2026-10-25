@@ -1,0 +1,5 @@
+# Public demo operator for the hosted demo instance. Shown on the login screen.
+# Disable by setting DEMO_OPERATOR_ENABLED=false on the server.
+name: Nisa
+email: nisa@sentinelops.demo
+password: SentinelOps-Demo-2026
