@@ -4,6 +4,13 @@
 if [ "${@: -2:1}" == "rails" ] && [ "${@: -1:1}" == "server" ]; then
   bundle exec rails db:prepare
   bundle exec rails db:seed
+
+  # Render's free plan has no persistent disk, so the KB embedding index is rebuilt
+  # after every boot. It runs in the background and never blocks or fails startup;
+  # without an embedding provider Incident Memory stays honestly "not indexed".
+  if [ -n "${EMBEDDING_PROVIDER}" ]; then
+    (bundle exec bin/index_knowledge || echo "Knowledge index skipped; Incident Memory stays pending.") &
+  fi
 fi
 
 exec "${@}"

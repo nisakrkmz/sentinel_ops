@@ -40,15 +40,27 @@ class AgentWorkflowRunnerTest < ActiveSupport::TestCase
     assert_includes @incident.timeline_events.pluck(:event_type), "agent_handoff"
   end
 
-  test "triage that requires a human skips resolution generation and hands off directly" do
+  test "triage that requires a human still hands off, with cited Incident Memory evidence in the brief" do
     @incident.update!(triage_status: "needs_human")
     @triage.update!(output_json: @triage.output_json.deep_merge(
       "needs_human" => { "value" => true, "probability" => 0.95, "reason_code" => "ambiguous_impact" }
     ))
 
-    result = AgentWorkflow::Runner.call(@incident, rag_runner: ->(_incident) { flunk "RAG must not run after needs_human" })
+    result = AgentWorkflow::Runner.call(@incident, rag_runner: grounded_rag_result)
 
+    assert_equal "handoff", result.status
     assert_equal "needs_human", result.handoff.reason_code
+    assert_not result.incident.resolved?
+    assert_equal [ "agent-workflow-grounded-memory-root-cause" ], result.handoff.brief.fetch("sources")
+  end
+
+  test "pending triage never runs resolution generation" do
+    @incident.update!(triage_status: "pending")
+    @triage.update!(status: :failed, output_json: {}, error_code: "provider_timeout")
+
+    result = AgentWorkflow::Runner.call(@incident, rag_runner: ->(_incident) { flunk "RAG must not run without a completed triage" })
+
+    assert_equal "provider_unavailable", result.handoff.reason_code
     assert_empty @incident.decisions.resolution
   end
 

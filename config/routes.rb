@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   get "/login", to: "sessions#new", as: :login
   post "/login", to: "sessions#create"
   delete "/logout", to: "sessions#destroy", as: :logout
+  get "/signup", to: "registrations#new", as: :signup
+  post "/signup", to: "registrations#create"
   root "incidents#index"
 
   namespace :api do
@@ -52,4 +54,5 @@ Rails.application.routes.draw do
 
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
+  get "healthz" => "health#show", as: :healthz
 end

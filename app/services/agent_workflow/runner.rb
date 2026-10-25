@@ -33,7 +33,9 @@ module AgentWorkflow
       end
       record_trace("agent_triage", "Triage #{triage&.status || 'pending'}; provider #{triage&.provider || 'unconfigured'}.")
 
-      if triage.nil? || triage.failed? || incident.triage_status.in?(%w[pending needs_human])
+      # needs_human still runs retrieval so the handoff brief carries cited evidence;
+      # Hitl::Policy hands it off before any resolution can be applied.
+      if triage.nil? || triage.failed? || incident.triage_status == "pending"
         return apply_policy(triage, nil, verification_passed: false, root_cause_evidenced: false)
       end
 
