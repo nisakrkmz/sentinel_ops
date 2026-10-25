@@ -18,3 +18,11 @@
 - Render Dashboard'dan deploy tetikleyicisi, kalıcı disk ve son deploy durumunu kontrol et.
 - Canlı servis erişilebilir olduğunda başlangıç ekranını çek ve mevcut matcher için canlı örnek akışını kaydet.
 - Ödevde belirtilen "geçen haftanın son commit'i" hash'ini proje sahibiyle teyit et.
+
+## Faz 7 öncesi düzeltmeler (2026-10-25)
+
+- **Jev:** Resmî sözleşme docs.typesafe.ai/api üzerinden doğrulandı (`POST https://api.typesafe.ai/v1/systemone`, `model`/`state`/`questions`, `choice`/`score`/`noul`). Adapter bu sözleşmeyle yazıldı; Jev anahtarı olmadığı için canlı Jev çağrısı yapılmadı. Jev metin üretmediğinden triage `rationale` alanı Jev'in tipli cevaplarından deterministik olarak derlenir; bu bir LLM gerekçesi değildir.
+- **Giriş:** `NISA_PASSWORD` kaldırıldı. Ek gem yerine Ruby stdlib OpenSSL PBKDF2-HMAC-SHA256 (210.000 iterasyon, kullanıcı başına tuz) seçildi; WSL'de sistem gem dizinine yazma izni olmadığı için `bcrypt` kurulamadı ve ek bağımlılık gerekmedi. Herkese açık demo instance için demo hesabı bilinçli olarak giriş ekranında gösterilir; `DEMO_OPERATOR_ENABLED=false` ile kapatılır. Render diski kalıcı olmadığından kayıtlı hesaplar deploy'da silinir.
+- **Gemini kotası:** `gemini-2.5-flash` ücretsiz katmanı 20 istekte 429 döndürdü; `gemini-flash-lite-latest` önerildi. `reasoning_effort: "none"` bu modelde HTTP 400 verdiği için yalnızca ENV ile ayarlanırsa gönderilir.
+- **needs_human + RAG:** Devir brief'inin "benzer olaylar + alıntılar" içermesi için triage `needs_human` dese de Incident Memory çalışır; politika yine devreder.
+- **Page Agent:** page-agent `interactiveWhitelist` yalnızca ekler; gerçek kısıtlama blacklist ile sağlandı. Turbo hover prefetch, sentetik tıklamalarla yarıştığı ve ana sayfa GET'i SLA kontrolüyle yazma yaptığı için kapatıldı.

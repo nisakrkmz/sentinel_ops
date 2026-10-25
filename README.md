@@ -85,7 +85,7 @@ Resolved (Çözüldü)
 
 ## Agent-first temeli — Faz 1
 
-Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parolası yalnızca sunucudaki `NISA_PASSWORD` ortam değişkeninden doğrulanır; en az 12 karakter olmalı, repoya veya sohbete yazılmamalıdır. UI üzerinden yapılan kayıt ve onaylar denetim izinde Nisa actor'ına bağlanır. REST API ve MCP kendi scope'lu bearer token kimlik doğrulamasını kullanmaya devam eder.
+Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` ile kayıt, `/login` ile e-posta + şifre girişi. Şifreler `users.password_digest` içinde tuzlu PBKDF2-HMAC-SHA256 (210.000 iterasyon) olarak saklanır; giriş denemeleri IP başına 10/dk ile sınırlıdır. Her kullanıcı bir `human` actor'a bağlıdır, UI'daki kayıt ve onaylar denetim izinde o kullanıcının actor'ına yazılır. Herkese açık demo instance için seed bir demo hesabı (`config/demo_operator.yml`) oluşturur ve giriş ekranında gösterir; `DEMO_OPERATOR_ENABLED=false` ile kapatılır. Eski `NISA_PASSWORD` mekanizması kaldırıldı. REST API ve MCP kendi scope'lu bearer token kimlik doğrulamasını kullanmaya devam eder.
 
 `ApiToken` ham bearer token'ı saklamaz; HMAC-SHA256 digest tutar, scope'ları sınırlar, kullanım zamanını izler ve iptal/süre sonu denetimi yapar. Token issue/auth çağrılarında `AGENT_TOKEN_PEPPER` sunucu ortamında tanımlı olmalıdır. Şu an bu token modellerini kullanan REST endpoint'i henüz yoktur. `Decision` ve `Handoff` tabloları audit/provenance ve insana devir kayıtları için eklenmiştir; henüz AI sağlayıcısı veya workflow bu kayıtları otomatik oluşturmuyor.
 
@@ -94,7 +94,8 @@ Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parola
 ## Typed incident triage — Faz 2
 
 - `DECISION_PROVIDER=groq|nvidia|huggingface|gemini` ile OpenAI-compatible JSON Schema triage adapter'ı seçilir. Sunucu ortamında `DECISION_API_KEY`, `DECISION_MODEL` ve tam HTTPS `DECISION_BASE_URL` verilmelidir. İstek toplam 8 saniyeyi aşmayacak şekilde sınırlandırılır ve en fazla bir retry yapılır.
-- Jev protokolü/payload resmi dokümanla doğrulanmadığından `DECISION_PROVIDER=jev` dürüstçe beklemede kalır; Jev kullanıldığı iddia edilmez.
+- `DECISION_PROVIDER=jev` TypeSafe Jev'in resmî `POST https://api.typesafe.ai/v1/systemone` sözleşmesini kullanır (docs.typesafe.ai/api, 2026-10-25). Triage şemasının her alanı tipli bir `choice`/`noul` sorusudur; Jev metin üretmediği için `rationale` Jev'in olasılıklarından derlenir. Duplicate tespiti için son 10 açık incident aday olarak verilir. ENV: `JEV_API_KEY` (zorunlu), `JEV_MODEL` (varsayılan `jev-latest`), `JEV_BASE_URL` (varsayılan resmî endpoint). Anahtar yoksa karar `jev_not_configured` ile dürüstçe beklemede kalır. Not: bu repoda Jev ile canlı çağrı henüz yapılmadı (anahtar yok); sözleşme birim testleriyle doğrulandı.
+- `DECISION_REASONING_EFFORT` / `LLM_REASONING_EFFORT` isteğe bağlıdır; ayarlanmazsa `reasoning_effort` gönderilmez (yeni Gemini modelleri `none` değerine HTTP 400 döndürüyor).
 - Provider yoksa/başarısızsa kayıt yine oluşur, `triage_status=pending` kalır ve başarısız deneme hata koduyla `decisions` tablosuna audit edilir; sahte öncelik/cevap üretilmez.
 - Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
 - Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Faz 3 Incident Memory/RAG akışı eklendi; gerçek embedding/LLM sağlayıcısı yapılandırılmadan indeksleme ve canlı öneri beklemededir.
@@ -107,7 +108,9 @@ Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parola
 - Seed corpus: 4 resolved incident kaydı ve 20 ek **sentetik** makale. Sentetik girdiler `source: synthetic_seed` etiketi taşır; doğrulanmış production vakası gibi sunulmaz.
 - Embedding sağlayıcısı HTTPS OpenAI-compatible embeddings endpoint'idir. `EMBEDDING_PROVIDER`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` ve `EMBEDDING_BASE_URL` sunucu ortamında tanımlanır. Vektörler SQLite JSON alanında tutulur, retrieval cosine similarity ile yapılır; keyword fallback yoktur.
 - `bin/index_knowledge` onaylı KB parçalarını indeksler (`--force` mevcut vektörleri yeniden üretir). Model/provider değiştiğinde eski vektörler kullanılmaz; yeniden indeksleme gerekir.
-- Resolution isteğinde System 1 tarzı, JSON Schema kısıtlı `DECISION_PROVIDER` adapter'ı retrieved parçaları relevance açısından puanlar ve evidence gate uygular. Jev'in resmi request sözleşmesi doğrulanmadığı için Jev kullanıldığı iddia edilmez. System 2 üretimi `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` ile seçilir.
+- Resolution isteğinde System 1 adapter'ı (`DECISION_PROVIDER`) retrieved parçaları relevance açısından puanlar ve evidence gate uygular. `DECISION_PROVIDER=jev` iken bu adım parça başına bir Jev `noul` sorusu + `evidence_sufficient` kapısıdır; diğer sağlayıcılarda JSON Schema kısıtlı LLM çağrısıdır. System 2 üretimi `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` ile seçilir.
+- Triage `needs_human` dese bile Incident Memory çalışır; bulunan kaynaklı öneri devir brief'ine eklenir, politika yine insana devreder (otomatik çözüm yok).
+- Render'ın ücretsiz planında disk kalıcı olmadığı için `bin/docker-entrypoint`, `EMBEDDING_PROVIDER` tanımlıysa açılışta arka planda `bin/index_knowledge` çalıştırır. İndeks durumu `/healthz` içinde görünür.
 - Her çözüm adımı geçerli bir `chunk_id` kaynağı vermelidir. Uygulama geçersiz/olmayan kaynakları çıkarır; güvenilir adım kalmazsa abstain edip insan incelemesi ister. Hiçbir production aksiyonu otomatik uygulanmaz. Başarılı relevance ve resolution kararları provider/model/prompt/hash/confidence/latency/sources ile `decisions` tablosuna kaydedilir.
 - İnsan çözüm formu doğrulama sonucunu da ister ve `kb_candidates` kuyruğuna kaydeder. Sadece insan onayından sonra makaleye dönüşür ve embedding yapılandırılmışsa indekslenir. Seed tekrar çalıştırıldığında sentetik ve onaylanmış KB kayıtları silinmez.
 - Knowledge Base sekmesi semantik arama ve tıklanabilir chunk kaynakları sunar. Incident detail'de “Kaynaklı çözüm öner” çağrısı retrieval + grading + grounded generation çalıştırır. Provider veya indeks yoksa hata/bekleme gösterilir; keyword/sahte cevap yoktur.
@@ -136,11 +139,14 @@ Web arayüzü `/login` üzerinden Nisa operatör oturumu ister. Nisa'nın parola
 
 - Alibaba `page-agent@1.12.4` published IIFE bundle'ı ve MIT lisansı `public/vendor/` içinde sabitlenmiştir; `?autoInit=false` ile upstream demo bootstrap'ı kapalıdır. Kurulum, DOM tabanlı etkileşim ve sınırlar için [araştırma notu](docs/research/RAG_JEV_PAGE_AGENT.md).
 - Copilot UI yalnızca yapılandırılmış sunucu provider'ı varsa açılır. Gerekli server ENV: `PAGE_AGENT_API_KEY`, `PAGE_AGENT_BASE_URL` (HTTPS chat-completions base URL), `PAGE_AGENT_MODEL`, `PAGE_AGENT_ALLOWED_MODELS` (virgülle ayrılmış allowlist; selected model listede bulunmalı). Anahtar browser'a gönderilmez.
+- Copilot sağ altta yüzen bir başlatıcıdır; tıklayınca sohbet paneli açılır (telefonda alttan tam genişlik). Panel `data-turbo-permanent` olduğu için sohbet ve çalışan görev sayfa geçişlerinde korunur; tam sayfa yenilemesinde görev en fazla 2 kez otomatik devam eder. page-agent'ın kendi paneli ve highlight etiketleri gizlidir.
+- page-agent'ın `interactiveWhitelist` seçeneği yalnızca eleman *ekler*, kısıtlamaz. Bu yüzden her adımdan önce `data-agent-id` taşımayan tüm etkileşimli elemanlar (ve Copilot paneli) `interactiveBlacklist`'e konur; böylece Çöz/Onayla/Reddet gibi kontroller gerçekten erişilemez. Adımlar süren Turbo geçişini bekler ve agent'ın sentetik link tıklamaları Turbo üzerinden yönlendirilir (aksi halde kopuk DOM elemanına tıklayıp sayfayı yeniden yüklüyordu).
+- Durum değiştiren işlemlerin onay diyaloğu yalnızca bir Copilot görevi çalışırken çıkar; insan kendisi tıkladığında araya girmez. Yeni bilet formundaki Copilot ipucu yalnızca Copilot bu oturumda açıldıysa görünür.
 - In-page copilot, yalnızca `data-agent-id` olan kontrolleri kullanır; `execute_javascript` aracı kapalıdır. Yeni incident formunu doldurup gönderebilir, ancak gönderimden önce tarayıcıda insan onayı zorunludur. İnsan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu da onaydan sonra çalıştırabilir; bu yalnızca uygulama içinde etiketli demo kaydı oluşturur, dış sisteme dokunmaz. Yeni kayıt için başlangıç atama grubunu yalnızca insan açıkça belirtirse değiştirir; mevcut incident'ları değiştiremez veya yeniden atayamaz. Caller alanları, e-posta ve telefonlar browser custom-fetch hook'unda, ayrıca DB'deki caller adları server proxy'de maskelenir.
-- `POST /page-agent/v1/chat/completions` Rails CSRF/same-origin koruması, IP başına 10 req/dk rate limit'i, 64 KiB request, 1,200 completion token ve 8 sn provider read timeout'u uygular. Çoklu instance için rate-limit cache'i shared cache'e taşınmalıdır.
+- `POST /page-agent/v1/chat/completions` Rails CSRF/same-origin koruması, IP başına 30 req/dk rate limit (12 adımlık bir görev + retry 10/dk sınırına takılıyordu)'i, 64 KiB request, 1,200 completion token ve 8 sn provider read timeout'u uygular. Çoklu instance için rate-limit cache'i shared cache'e taşınmalıdır.
 - Provider upstream çağrısı başarısız olursa logda yalnızca HTTP status yazılır (anahtar/yanıt gövdesi değil); copilot panelinde 401/403 kimlik-model erişimi, 404 model/endpoint, 429 kota/rate limit, 400 istek/tool-calling uyumsuzluğu ve 5xx geçici sağlayıcı hatası için ayrı açıklama gösterilir.
 - Rails request loglarında Page Agent `messages`, `content` ve `tools` gövdeleri `FILTERED` olarak maskelenir; bilet sayfa içeriği loglarda tutulmaz.
-- Copilot read/search/navigation yapabilir, yeni incident formunu insanın açık isteği üzerine doldurup gönderebilir ve insan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu çalıştırabilir; her iki işlemden önce tarayıcı onayı zorunludur. Simülasyon yalnızca SİMÜLASYON etiketli uygulama kaydı üretir. Yeni kayıt için başlangıç atama grubu ancak insan açıkça isterse ayarlanır. Mevcut incident'ları değiştirme/yeniden atama, çözme, onaylama/reddetme yetkisi yoktur. Turbo sayfa geçişinde agent dispose edilir; yeni form sayfasına geçince copilot yeniden açılmalıdır. Groq HTTP 400/429 bu oturumda form/tool isteğinin reddedildiğini ve quota/rate-limit durumunu gösterdi; sağlayıcı düzelmeden hiçbir copilot görevi çalışmış sayılmaz.
+- Copilot read/search/navigation yapabilir, yeni incident formunu insanın açık isteği üzerine doldurup gönderebilir ve insan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu çalıştırabilir; her iki işlemden önce tarayıcı onayı zorunludur. Simülasyon yalnızca SİMÜLASYON etiketli uygulama kaydı üretir. Yeni kayıt için başlangıç atama grubu ancak insan açıkça isterse ayarlanır. Mevcut incident'ları değiştirme/yeniden atama, çözme, onaylama/reddetme yetkisi yoktur. Groq HTTP 400/429 bu oturumda form/tool isteğinin reddedildiğini ve quota/rate-limit durumunu gösterdi; sağlayıcı düzelmeden hiçbir copilot görevi çalışmış sayılmaz.
 
 ---
 
@@ -212,15 +218,14 @@ bundle install
 bin/rails db:prepare
 bin/rails db:seed
 
-# Parolayı terminalde gizli olarak girin; bu değer komut geçmişine yazılmaz.
-read -s -p "Nisa parolası (en az 12 karakter): " NISA_PASSWORD
-printf '\n'
-export NISA_PASSWORD
+# (İsteğe bağlı) Incident Memory indeksini oluşturun; EMBEDDING_* gerekir.
+bin/index_knowledge
 
-# Aynı terminal oturumunda sunucuyu başlatın.
 bin/rails server -b 0.0.0.0 -p 3000
 ```
-Tarayıcınızdan `http://localhost:3000` adresine gidin; **Nisa** kullanıcı adı ve belirlediğiniz parola ile giriş yapın. Render'da `NISA_PASSWORD` değerini servis ayarlarında secret environment variable olarak ekleyin ve yeniden deploy edin. Parolayı repoya veya sohbete koymayın.
+Tarayıcınızdan `http://localhost:3000` adresine gidin. Giriş ekranındaki **Demo hesabı** kutusundan "Bilgileri doldur" ile girebilir veya **Kayıt ol** ile kendi hesabınızı açabilirsiniz. Sunucuda şifre ortam değişkeni gerekmez.
+
+Sağlayıcı anahtarları yalnızca git-ignored `.env` (lokal) veya Render panelindeki environment variable'larda durur. Gemini ücretsiz katmanında `gemini-2.5-flash` günlük ~20 istekle sınırlıdır; bir bilet 3, bir Copilot görevi ~5–12 çağrı yaptığı için demo için `gemini-flash-lite-latest` önerilir.
 
 ---
 

@@ -31,8 +31,8 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 - Servis türü ve yapılandırma dosyası: Render `web`, Docker; `render.yaml` → `Dockerfile`, ücretsiz plan, Frankfurt.
 - Deploy tetikleyicisi: yapılandırma deposunda belirtilmiyor; Render panelindeki otomatik/manual deploy ayarı doğrulanmadı.
 - Build komutu: `Dockerfile` ile imaj oluşturma. Start komutu: `bundle exec rails server` (Dockerfile `CMD`; varsayılan port 80).
-- Başlangıçta `bin/docker-entrypoint`, server komutuyla başlatıldığında `bundle exec rails db:prepare` ve `bundle exec rails db:seed` çalıştırır.
-- Sağlık kontrolü: Rails'in varsayılan `/up` rotası (`config/routes.rb`). `/healthz` rotası mevcut değil.
+- Başlangıçta `bin/docker-entrypoint`, server komutuyla başlatıldığında `bundle exec rails db:prepare` ve `bundle exec rails db:seed` çalıştırır; `EMBEDDING_PROVIDER` tanımlıysa arka planda `bin/index_knowledge` ile KB indeksini yeniden kurar (disk kalıcı olmadığı için her açılışta gerekir; başarısız olursa açılışı bozmaz).
+- Sağlık kontrolü: `/healthz` (public JSON: DB durumu, sağlayıcıların yapılandırılıp yapılandırılmadığı ve model adı, KB indeks sayısı; anahtar/endpoint içermez) ve Rails'in `/up` rotası.
 - Not: Render ücretsiz katmanında servis boşta uyuyabilir. Sunumdan önce canlı URL'yi aç ve ısıt.
 - 2026-10-19 kontrolünde canlı URL 503 döndürdü. 2026-10-22'de `/`, `/up` ve `/healthz` istekleri 30 saniyede yanıt vermedi (HTTP 000); canlı demo ve mevcut Render deploy durumu doğrulanamadı.
 - Render tanımında kalıcı disk yok; production SQLite kalıcılığı garanti edilmemiştir. Canlı doğrulama için her fazdan sonra deploy'u bekle ve demo adımlarını çalıştır.
@@ -45,9 +45,12 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 | `WEB_CONCURRENCY` | Puma worker sayısı | Render'da `1` |
 | `RAILS_MAX_THREADS` | Rails/Puma thread sayısı | Render'da `3` |
 | `DATABASE_PATH` | Production SQLite dosya yolu | Render'da `/rails/storage/production.sqlite3` |
-| `NISA_PASSWORD` | Nisa web hesabı parolası; sunucuda tutulur ve en az 12 karakter olmalıdır | Web UI etkinse |
+| `DEMO_OPERATOR_ENABLED` | `false` ise demo hesabı seed edilmez ve giriş ekranında gösterilmez | Hayır (varsayılan açık) |
 | `AGENT_TOKEN_PEPPER` | API token HMAC digest'i için secret pepper | Token issue/auth işlemleri kullanılırsa |
 | `DECISION_PROVIDER` | `jev` \| `groq` \| `nvidia` \| `huggingface` \| `gemini` | Triage provider kullanılırsa |
+| `JEV_API_KEY` | TypeSafe Jev anahtarı (`DECISION_PROVIDER=jev`) | Jev seçilirse |
+| `JEV_MODEL` / `JEV_BASE_URL` | Varsayılan `jev-latest` / `https://api.typesafe.ai/v1/systemone` | Hayır |
+| `DECISION_REASONING_EFFORT` / `LLM_REASONING_EFFORT` | Ayarlanırsa `reasoning_effort` olarak gönderilir; Gemini'de `none` HTTP 400 verir, boş bırak | Hayır |
 | `DECISION_API_KEY` | Schema-constrained triage provider key'i | LLM JSON provider seçilirse |
 | `DECISION_MODEL` | Triage model adı | LLM JSON provider seçilirse |
 | `DECISION_BASE_URL` | HTTPS OpenAI-compatible chat-completions endpoint'i | LLM JSON provider seçilirse |
@@ -65,9 +68,11 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 | `PAGE_AGENT_ALLOWED_MODELS` | Virgülle ayrılmış model allowlist'i | Page Agent copilot etkinleştirilirse |
 | API rate limit | `config/api.yml` — token başına 120 req/60 sn, 1–100 page size | Varsayılan açık |
 
-Web arayüzü `/login` sayfasında Nisa oturumu ister; `NISA_PASSWORD` yoksa veya 12 karakterden kısaysa form devre dışı kalır. REST API ve MCP kendi bearer-token kimlik doğrulamasını kullanır.
+Web arayüzü DB'ye bağlı hesaplar kullanır (`users` tablosu, PBKDF2-SHA256 hash; `/signup` kayıt, `/login` e-posta + şifre). Her `User` bir `human` actor'a bağlıdır. Seed, `config/demo_operator.yml` içindeki herkese açık demo hesabını oluşturur ve giriş ekranında gösterir. Render'ın diski kalıcı olmadığından kayıtlı hesaplar her deploy'da sıfırlanır; demo hesabı her açılışta yeniden oluşur. REST API ve MCP kendi bearer-token kimlik doğrulamasını kullanır.
 
-`DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Page Agent, bu dört ENV birlikte ayarlı ve seçilen model allowlist içinde ise etkinleşir; aksi halde UI copilot'ı beklemede gösterir, proxy 503 döndürür. Jev için payload adapter'ı, resmi protokol doğrulanmadığı için bilinçli olarak kapalıdır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
+Gemini ücretsiz katmanında `gemini-2.5-flash` günlük ~20 istekle sınırlı (2026-10-25'te 429 ile doğrulandı). Demo için `DECISION_MODEL`, `LLM_MODEL`, `PAGE_AGENT_MODEL` = `gemini-flash-lite-latest` kullan ve `PAGE_AGENT_ALLOWED_MODELS` içine ekle.
+
+`DECISION_PROVIDER`/`DECISION_*`, LLM/embedding sağlayıcıları ve page-agent proxy değişkenleri şu an `render.yaml` içinde tanımlı değildir. Page Agent, bu dört ENV birlikte ayarlı ve seçilen model allowlist içinde ise etkinleşir; aksi halde UI copilot'ı beklemede gösterir, proxy 503 döndürür. Jev adapter'ı resmî `POST /v1/systemone` sözleşmesini kullanır (`app/services/jev/client.rb`); `JEV_API_KEY` yoksa karar `jev_not_configured` ile beklemede kalır. Token/provider işlemlerini deploy'da etkinleştirmeden önce gereken değerleri Render server environment'a ekle. Sağlayıcı anahtarları repoya, loglara, istemci koduna veya hata mesajlarına **asla** yazılmaz.
 
 ## Agent REST API ve MCP
 
@@ -91,9 +96,9 @@ Web arayüzü `/login` sayfasında Nisa oturumu ister; `NISA_PASSWORD` yoksa vey
 
 - `page-agent@1.12.4` IIFE bundle'ı `public/vendor/page-agent-1.12.4.js` içinde MIT lisansı ve sürüm sabitlemesiyle vendored. Layout, `?autoInit=false` kullanır; vendor demo endpoint'ini başlatma.
 - Feature sadece `PAGE_AGENT_API_KEY`, `PAGE_AGENT_BASE_URL`, `PAGE_AGENT_MODEL`, `PAGE_AGENT_ALLOWED_MODELS` sunucu ENV'leri geçerliyse etkinleşir. `PAGE_AGENT_MODEL`, allowlist içinde olmalı; tüm endpoint'ler TLS/HTTPS kullanmalı.
-- Browser çağrıları `/page-agent/v1/chat/completions` same-origin proxy'sine gider. Proxy provider key'i ekler; istemciden gelen Authorization başlığını kullanmaz. Rate limit IP başına 10/dk, istek 64 KiB, completion 1,200 token, okuma timeout'u 8 sn. Rate-limit cache'i process-local'dir.
-- Copilot yalnızca `data-agent-id` interaktif kontrollerine izin verir; `execute_javascript` aracı kapalıdır. `data-agent-private` değerleri, DB'deki caller adları, email ve telefonlar LLM'e gönderilmeden maskelenir.
-- Copilot read/search/navigation içindir. Submit, resolution, assignment, claim, approve ve reject agent etkileşim allowlist'inde değildir; state-changing UI formları ayrıca insan onayı ister. Turbo navigation mevcut agent örneğini kapatır; extension ile multi-page destek entegre değildir.
+- Browser çağrıları `/page-agent/v1/chat/completions` same-origin proxy'sine gider. Proxy provider key'i ekler; istemciden gelen Authorization başlığını kullanmaz. Rate limit IP başına 30/dk, istek 64 KiB, completion 1,200 token, okuma timeout'u 8 sn. Rate-limit cache'i process-local'dir.
+- Copilot yalnızca `data-agent-id` interaktif kontrollerine izin verir: her adımdan önce diğer tüm etkileşimli elemanlar `interactiveBlacklist`e konur (page-agent'ın whitelist'i tek başına kısıtlamaz, sadece ekler). `execute_javascript` aracı kapalıdır. `data-agent-private` değerleri, DB'deki caller adları, email ve telefonlar LLM'e gönderilmeden maskelenir.
+- Copilot read/search/navigation içindir. Submit, resolution, assignment, claim, approve ve reject agent etkileşim allowlist'inde değildir; state-changing UI formları, Copilot görevi çalışırken insan onayı ister (insan kendisi tıklarken diyalog çıkmaz). Copilot sağ alttaki `layouts/_copilot` panelidir (`data-turbo-permanent`); görev Turbo geçişlerinde sürer, adımlar süren Turbo ziyaretini bekler, agent'ın sentetik link tıklamaları `Turbo.visit`e yönlendirilir, tam sayfa yenilemesinde görev en fazla 2 kez devam eder. Turbo hover prefetch kapalıdır.
 - Provider ENV yoksa UI "Provider beklemede" gösterir; credential paylaşmak için sohbete yapıştırma, yalnızca secret manager/Render server ENV kullan.
 - Kaynak ve limitler: [`docs/research/RAG_JEV_PAGE_AGENT.md`](docs/research/RAG_JEV_PAGE_AGENT.md).
 
@@ -107,7 +112,8 @@ Web arayüzü `/login` sayfasında Nisa oturumu ister; `NISA_PASSWORD` yoksa vey
 - Faz 3 KB veri modeli yapılandırılmış 4-chunk makaleler ve SQLite JSON embedding'leri kullanır. 4 seed resolved incident + 20 açıkça `synthetic_seed` olarak işaretli makale vardır. Embed sağlayıcısı yoksa arama/çözüm önerisi disabled/pending kalır.
 - `bin/index_knowledge` onaylı makaleleri mevcut embedding provider/model ile indeksler; `--force` tüm vektörleri yeniler. `bin/eval_rag` varsayılan olarak canlı model ölçümü yapmaz; gerçek çağrı için `EVAL_RAG_LIVE=1` gerekir.
 - `bin/live_smoke` tek bir sentetik incident örneğini gerçek triage sağlayıcısına gönderir, veritabanına incident yazmaz ve sonucu API anahtarı/ticket metni olmadan `eval/live_runs/` altına JSON olarak kaydeder. Sağlayıcı yapılandırılmamışsa hata kodlu kayıt üretip non-zero ile çıkar.
-- Doğrudan kullanıcıya görünen `/healthz` beklenmemeli; mevcut sağlık endpoint'i `/up`'tır.
+- `/healthz` (sağlayıcı ve KB indeks durumu) ve `/up` mevcuttur.
+- Testler `.env` dosyasını yüklemez (`config/application.rb`); birim testleri gerçek sağlayıcıya gitmez. Lokal tarayıcı doğrulaması için WSL'de sunucu + Windows Chrome headless CDP kullanıldı.
 
 ## Mimari kuralları
 
