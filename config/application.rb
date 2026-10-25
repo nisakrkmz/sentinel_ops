@@ -6,9 +6,10 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-# Load local .env file if present (git-ignored)
+# Load local .env file if present (git-ignored). The test suite never reads it, so
+# unit tests cannot reach real providers with developer credentials.
 env_file = File.expand_path("../.env", __dir__)
-if File.exist?(env_file)
+if File.exist?(env_file) && ENV["RAILS_ENV"] != "test"
   File.foreach(env_file) do |line|
     line = line.strip
     next if line.empty? || line.start_with?("#")
