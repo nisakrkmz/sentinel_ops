@@ -220,11 +220,13 @@
       <p class="provider-note"><strong>Gerekçe:</strong> <%= output["rationale"] %></p>
       <p class="provider-note">
         Provider: <%= @triage_attempt.provider %> · Model: <%= @triage_attempt.model.presence || "bilinmiyor" %> · Gecikme: <%= @triage_attempt.latency_ms %> ms
+        <% if @triage_attempt.confidence %> · Güven: <%= number_to_percentage(@triage_attempt.confidence * 100, precision: 0) %><% end %>
+        <% if @triage_attempt.provider == "jev" %> · System 1 (TypeSafe Jev, tipli karar)<% end %>
       </p>
     <% else %>
       <p>
-        <% if @triage_attempt&.error_code == "jev_contract_unverified" %>
-          Jev adapter sözleşmesi doğrulanmadığı için etkin değil.
+        <% if @triage_attempt&.error_code == "jev_not_configured" %>
+          Jev seçili ancak sunucuda <code>JEV_API_KEY</code> tanımlı değil.
         <% elsif @triage_attempt&.error_code.present? %>
           Triage sağlayıcısı kullanılamıyor (<%= @triage_attempt.error_code %>). Otomatik karar kaydedilmedi.
         <% else %>
@@ -288,7 +290,7 @@
 <section class="enterprise-card section-stack">
   <div class="enterprise-card-header">
     <span class="card-title-text">Incident Memory · Benzer geçmiş vakalar ve çözüm önerisi</span>
-    <%= button_to "Kaynaklı çözüm öner", suggest_resolution_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false } %>
+    <%= button_to "Kaynaklı çözüm öner", suggest_resolution_incident_path(@incident), method: :post, class: "btn btn-primary btn-sm", data: { turbo: false, agent_id: "suggest-resolution" }, aria: { label: "Incident Memory ile kaynaklı çözüm önerisi üret" } %>
   </div>
   <div class="card-body">
     <% if @relevance_decision&.completed? %>

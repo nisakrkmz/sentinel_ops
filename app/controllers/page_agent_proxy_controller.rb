@@ -1,5 +1,6 @@
 class PageAgentProxyController < ApplicationController
-  RATE_LIMIT = 10
+  # One copilot task is up to 12 model steps plus retries; 10/min cut tasks off mid-way.
+  RATE_LIMIT = 30
   RATE_WINDOW = 1.minute
 
   def create

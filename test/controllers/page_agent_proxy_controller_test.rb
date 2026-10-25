@@ -49,7 +49,9 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     get new_incident_path
 
     assert_response :success
-    assert_select ".info-banner", text: /Page Agent bu formu senin adına doldurup gönderebilir/
+    # Rendered hidden; page_agent.js reveals it only after the copilot was opened in this session.
+    assert_select ".info-banner[data-copilot-hint][hidden]", text: /Page Agent Copilot bu formu senin adına doldurup gönderebilir/
+    assert_select "#sentinel-copilot[data-copilot-enabled='true'] textarea:not([disabled])"
   end
 
   test "rejects cross-origin requests and models outside the configured allowlist" do
@@ -72,7 +74,7 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
 
   test "limits proxy traffic per source and returns a retry interval" do
     invalid_payload = @payload.merge(messages: [])
-    10.times do
+    PageAgentProxyController::RATE_LIMIT.times do
       post PATH, params: invalid_payload, headers: @headers, as: :json
       assert_response :bad_request
     end

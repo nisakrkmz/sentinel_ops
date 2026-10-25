@@ -38,8 +38,9 @@
 
     <div style="padding: 1.5rem;">
       <% if PageAgentProxy.configured? %>
-        <div class="info-banner" role="note">
-          Page Agent bu formu senin adına doldurup gönderebilir. Yeni kayıt oluşturulmadan önce gönderimi onaylaman istenir.
+        <%# Görünürlüğü page_agent.js yönetir: yalnızca bu oturumda Copilot açıldıysa gösterilir. %>
+        <div class="info-banner copilot-hint" role="note" data-copilot-hint hidden>
+          Page Agent Copilot bu formu senin adına doldurup gönderebilir. Yeni kayıt oluşturulmadan önce gönderimi onaylaman istenir.
         </div>
       <% end %>
 
