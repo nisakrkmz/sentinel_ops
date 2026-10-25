@@ -42,12 +42,29 @@
 | page-agent Copilot: sağ alt buton → orijinal panel + hareket eden imleç; gerçek izin listesi, PII maskeleme, sunucu proxy'si, onay | [`08652db`](https://github.com/nisakrkmz/sentinel_ops/commit/08652db), [`eefc5ff`](https://github.com/nisakrkmz/sentinel_ops/commit/eefc5ff), [`f3decba`](https://github.com/nisakrkmz/sentinel_ops/commit/f3decba) | Headless Chrome + gerçek Gemini: "KB'de VPN IP havuzu ara" görevi sayfa geçişi boyunca tamamlandı; "Yeni bilet aç…" görevi formu doldurdu, onaydan sonra bilet oluştu |
 | DB'ye bağlı giriş (kayıt/giriş, PBKDF2), responsive arayüz, `/healthz`, hata düzeltmeleri | [`5b2f999`](https://github.com/nisakrkmz/sentinel_ops/commit/5b2f999), [`fa4ca42`](https://github.com/nisakrkmz/sentinel_ops/commit/fa4ca42), [`1f8c1e8`](https://github.com/nisakrkmz/sentinel_ops/commit/1f8c1e8) | Oturum/kayıt testleri; 390px'te yatay taşma yok |
 
-**Eval** ([`eval/RESULTS.md`](eval/RESULTS.md)) — 40 etiketli TR/EN bilet (negasyon, "acil" ama düşük öncelik, duplicate, prompt injection örnekleri dahil):
+**Eval** — gerçek model çağrılarıyla, 25 Ekim 2026, Gemini `gemini-flash-lite-latest` (sağlayıcı hatası: 0):
 
-| Metrik | Kelime tabanlı baseline | LLM |
+*Triage* ([`eval/RESULTS.md`](eval/RESULTS.md)): 40 etiketli TR/EN bilet; negasyon, "acil" deyip düşük öncelikli olan, duplicate ve prompt injection örnekleri dahil. Komut: `EVAL_LIVE=1 bin/eval_triage`.
+
+| Metrik | Kelime tabanlı baseline | LLM (Gemini) |
 |---|---|---|
-| Öncelik doğruluğu | 0.40 | Ölçülmedi |
-| `needs_human` precision / recall | 1.00 / 0.40 | Ölçülmedi |
+| Öncelik doğruluğu | 0.40 | **0.525** |
+| P4 biletleri doğru bilme | 1 / 10 | **10 / 10** |
+| P4 bileti yanlışlıkla P1 sayma | 8 / 10 | **0 / 10** |
+| `needs_human` precision / recall | 1.00 / 0.40 | **1.00 / 0.60** |
+| Prompt injection örneklerinde talimata uyma | — | **0 / 3** ([`eval/live_runs/prompt_injection_2026-10-25.json`](eval/live_runs/prompt_injection_2026-10-25.json)) |
+| Ortalama gecikme | ~0 ms | 1.95 sn |
+
+*RAG — Incident Memory* ([`eval/RAG_RESULTS.md`](eval/RAG_RESULTS.md)): 25 soru; 20'sinin cevabı KB'de var, 5'inin yok. Komut: `EVAL_RAG_LIVE=1 bin/eval_rag`.
+
+| Metrik | Sonuç |
+|---|---|
+| hit@1 / hit@3 | **0.95 / 1.00** |
+| Alıntı geçerliliği | **1.00** (40/40 alıntı gerçek KB parçası) |
+| KB'de cevabı olmayan sorularda doğru çekimserlik | **1.00** (5/5) |
+| Ortalama gecikme (alaka + üretim) | 3.03 sn |
+
+Yorum: LLM baseline'dan iyi ama mükemmel değil. Özellikle P2 biletlerinin 7'sini P3 sayarak önceliği düşük tahmin etme eğiliminde; politika bu yüzden düşük güven ve `needs_human` durumlarında insana devrediyor.
 
 **Kullanılan sağlayıcılar (dürüstçe):** Triage, RAG alaka kararı, çözüm üretimi ve page-agent için Google Gemini (`gemini-flash-lite-latest`), embedding için `gemini-embedding-001`. Jev ile hiçbir canlı çağrı yapılmadı.
 
@@ -60,7 +77,7 @@
 
 ### Vaat edip yapamadıklarım
 
-- **LLM eval sayıları yok.** Tabloda yalnızca keyword baseline ölçüldü; gerçek modelle `EVAL_LIVE=1 bin/eval_triage` ve `EVAL_RAG_LIVE=1 bin/eval_rag` çalıştırılmadı.
+- **Eval küçük ölçekli.** 40 triage + 25 RAG örneğinin çoğu sentetik; sonuçlar yön gösterir, istatistiksel olarak güçlü değildir. Triage eval'i tek modelle ve tek koşuyla yapıldı.
 - **Jev ile canlı çağrı yok.** Adapter yazıldı ve testlendi; canlı demoda bilinçli olarak kullanılmıyor (bkz. Karar).
 - **Agent'ın REST API/MCP üzerinden bilet açması canlıda gösterilmedi.** API testlerle doğrulandı. Canlıda token için Render'da `AGENT_TOKEN_PEPPER` gerekiyor; canlı demodaki agent kaynaklı bilet Kurumsal Simülasyon üzerinden açılıyor.
 - **Render'ın diski kalıcı değil.** Her deploy'da veritabanı sıfırlanır; demo verisi ve demo hesabı her açılışta yeniden oluşur.
@@ -92,7 +109,7 @@ Sonraki geri bildirimlerim: [`docs/prompts/01_phase7_feedback.md`](docs/prompts/
 Gerekçe — "Bundan bir iş çıkar mı?": Evet. İlk seviye triage ve tekrar eden olayların çözüm bilgisinin yeniden kullanılamaması, kurumların bugün para ve personel harcadığı, ölçülebilir bir acı. ServiceNow dahil sektör de agent destekli triage'a gidiyor. Pivot gerekmiyor, çünkü ürün (olay, SLA, KB, major incident) doğru problem alanında; eksik olan akıllı ve agent'ların erişebildiği katmandı. Öldürmek de gerekmiyor, çünkü klonun iskeleti bu katmanın oturacağı doğru zemin.
 
 **Slop testi:** "Benimkinde olup diğerlerinde olmayan şey: **bileti açan, triyajlayan ve çözüm öneren taraf bir agent olabiliyor; her karar şemalı, güven skorlu, kaynak gösteren ve insana devredilebilir.**"
-Kanıt: canlı demo adımları 2–4 (Agent Run Trace'te her kararın sağlayıcısı, güveni ve kaynakları görünür) ve kelime tabanlı baseline'ın 0.40 doğrulukta kaldığı eval seti.
+Kanıt: canlı demo adımları 2–4 (Agent Run Trace'te her kararın sağlayıcısı, güveni ve kaynakları görünür) ve eval. Aynı 40 bilette kelime tabanlı baseline %40, LLM %52,5 öncelik doğruluğu verdi; baseline 10 düşük öncelikli biletin 8'ini P1 sayarken LLM hiçbirini saymadı. RAG 40 alıntının 40'ında gerçek KB parçası gösterdi ve cevabı olmayan 5 sorunun 5'inde uydurmak yerine çekimser kaldı.
 
 **Kişisel hedefim — "ServiceNow klonuna RAG + JEV araştırması ekle. Alibaba page-agent'ı incele.":**
 - **RAG — çalışıyor:** Incident Memory, gerçek embedding araması, alaka kapısı ve alıntı doğrulamalı çözüm üretiyor; kanıt yetersizse çekimser kalıp insana devrediyor.

@@ -32,9 +32,29 @@ if ENV["EVAL_RAG_LIVE"] == "1"
   citation_count = 0
   valid_citation_count = 0
   durations_ms = []
+  # Free-tier providers rate-limit per minute: pace cases and back off on
+  # retryable errors. Cases whose generation ends "pending" (provider failure)
+  # are counted and reported; they never count as a correct abstain or add
+  # citations. hit@k measures retrieval only, so it is scored before generation.
+  pace_seconds = ENV.fetch("EVAL_PACE_SECONDS", "6").to_f
+  backoff_seconds = [ 15, 30, 60 ]
+  pending_cases = []
 
   records.each do |record|
-    retrieval = Rag::Retriever.call(record.fetch("query"), provider: embedding_provider)
+    sleep(pace_seconds)
+    attempt = 0
+    begin
+      retrieval = Rag::Retriever.call(record.fetch("query"), provider: embedding_provider)
+    rescue Rag::ProviderError => error
+      if attempt < backoff_seconds.length && error.code.in?(%w[embedding_provider_retryable embedding_timeout])
+        sleep(backoff_seconds[attempt])
+        attempt += 1
+        retry
+      end
+      pending_cases << { "id" => record.fetch("id"), "code" => error.code }
+      unanswerable_cases += 1 unless record.fetch("answerable")
+      next
+    end
     ranked_slugs = retrieval.chunks.map { |entry| entry.fetch(:chunk).knowledge_article.slug }
     if record.fetch("answerable")
       expected_slug = record.fetch("expected_article_slug")
@@ -64,6 +84,10 @@ if ENV["EVAL_RAG_LIVE"] == "1"
       raise ActiveRecord::Rollback
     end
     durations_ms << ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000)
+    if workflow_result.status == "pending"
+      pending_cases << { "id" => record.fetch("id"), "code" => workflow_result.error_code }
+      next
+    end
     citation_count += workflow_result.citation_count.to_i
     valid_citation_count += workflow_result.valid_citation_count.to_i
     correct_abstains += 1 if !record.fetch("answerable") && workflow_result.status == "insufficient_evidence"
@@ -85,7 +109,9 @@ if ENV["EVAL_RAG_LIVE"] == "1"
       "citation_count" => citation_count,
       "valid_citation_count" => valid_citation_count,
       "correct_abstain_rate" => (unanswerable_cases.zero? ? nil : (correct_abstains.to_f / unanswerable_cases).round(4)),
-      "average_latency_ms" => (durations_ms.sum / durations_ms.length).round(2)
+      "average_latency_ms" => (durations_ms.empty? ? nil : (durations_ms.sum / durations_ms.length).round(2)),
+      "pending_cases" => pending_cases.length,
+      "pending_case_details" => pending_cases
     }
   }
 end

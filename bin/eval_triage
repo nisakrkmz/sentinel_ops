@@ -64,7 +64,13 @@ if ENV["EVAL_LIVE"] == "1"
   provider = Triage::DecisionProviders::Factory.build
   raise "Live eval requested but the decision provider is not configured" unless provider.configured?
 
+  # Free-tier providers rate-limit per minute: pace calls and back off on
+  # retryable errors. A ticket that still fails is scored as wrong (priority
+  # "ERROR", needs_human true) and counted, so failures never inflate accuracy.
+  pace_seconds = ENV.fetch("EVAL_PACE_SECONDS", "4").to_f
+  backoff_seconds = [ 15, 30, 60 ]
   provider_latencies = []
+  provider_errors = []
   outputs = records.map do |record|
     incident = Struct.new(:short_description, :description, :service_affected, :category, :assignment_group).new(
       record.fetch("short_description"),
@@ -73,22 +79,34 @@ if ENV["EVAL_LIVE"] == "1"
       "Enterprise Software",
       "ITSM Platform Operations"
     )
-    started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    output = provider.call(incident)
-    provider_latencies << (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
-    errors = Triage::Schema.validate(output)
-    raise "Provider output failed validation for #{record.fetch('id')}: #{errors.join('; ')}" if errors.any?
+    attempt = 0
+    begin
+      sleep(pace_seconds)
+      started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      output = provider.call(incident)
+      provider_latencies << (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000
+      errors = Triage::Schema.validate(output)
+      raise Triage::ProviderError.new("invalid_provider_output", errors.join("; ")) if errors.any?
 
-    {
-      "priority" => output.fetch("priority"),
-      "needs_human" => output.fetch("needs_human").fetch("value")
-    }
+      { "priority" => output.fetch("priority"), "needs_human" => output.fetch("needs_human").fetch("value") }
+    rescue Triage::ProviderError => error
+      if attempt < backoff_seconds.length && error.code.in?(%w[provider_http_retryable provider_timeout])
+        sleep(backoff_seconds[attempt])
+        attempt += 1
+        retry
+      end
+      provider_errors << { "id" => record.fetch("id"), "code" => error.code }
+      { "priority" => "ERROR", "needs_human" => true }
+    end
   end
   report["provider"] = {
     "status" => "completed",
     "provider" => provider.provider,
     "model" => provider.model,
-    "metrics" => metrics(records, outputs, provider_latencies)
+    "metrics" => metrics(records, outputs, provider_latencies.presence || [ 0 ]).merge(
+      "provider_errors" => provider_errors.length,
+      "provider_error_details" => provider_errors
+    )
   }
 end
 
