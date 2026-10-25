@@ -70,9 +70,10 @@
 
 | | Süre |
 |---|---|
-| İnsan zamanı (Nisa) | ≈ 3 saat |
-| Agent zamanı (coding agent, ölçülebilen) | ≈ 1 saat 20 dakika: 19–20 Ekim Faz 0–1 ≈ 29 dk + 25 Ekim denetim/düzeltme oturumu ≈ 51 dk |
-| Agent zamanı (ölçülemeyen) | 20–24 Ekim oturumları (triage, RAG, API/MCP, HITL, page-agent) ve 25 Ekim'deki sonraki düzeltmeler için güvenilir başlangıç/bitiş kaydı tutulmadı |
+| **İnsan zamanı (Nisa)** | **Yaklaşık 3 saat** (Nisa'nın kendi tahmini; ölçülmedi) |
+| **Agent zamanı — toplam** | **Yaklaşık 7–8 saat** (Nisa'nın tahmini; oturumların çoğunda kayıt tutulmadığı için ölçüm değil) |
+| Agent zamanı — ölçülen kısım | ≈ 1 saat 20 dakika: 19–20 Ekim Faz 0–1 ≈ 29 dk (zaman damgalarıyla) + 25 Ekim denetim/düzeltme oturumu ≈ 51 dk (16:48:32–17:39:18) |
+| Agent zamanı — ölçülemeyen kısım | 20–24 Ekim oturumları (triage, RAG, API/MCP, HITL, page-agent) ve 25 Ekim'deki sonraki düzeltmeler için güvenilir başlangıç/bitiş kaydı tutulmadı; toplam tahmine dahildir |
 
 **İlk prompt (olduğu gibi, yazım hataları dahil):** Claude'a (sohbet arayüzü) yazdığım ham ilk mesaj. Ekler: `odev.docx` (hocanın ödev metni) ve projenin canlı deploy ekran görüntüsü.
 
