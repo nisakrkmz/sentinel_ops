@@ -71,12 +71,16 @@
 | | Süre |
 |---|---|
 | İnsan zamanı (Nisa) | ≈ 3 saat |
-| Agent zamanı (coding agent, ölçülebilen) | ≈ 1 saat 25 dakika: 19–20 Ekim Faz 0–1 ≈ 29 dk + 25 Ekim denetim/düzeltme oturumu ≈ 51 dk + 25 Ekim dokümantasyon toparlama ≈ 5 dk |
+| Agent zamanı (coding agent, ölçülebilen) | ≈ 1 saat 20 dakika: 19–20 Ekim Faz 0–1 ≈ 29 dk + 25 Ekim denetim/düzeltme oturumu ≈ 51 dk |
 | Agent zamanı (ölçülemeyen) | 20–24 Ekim oturumları (triage, RAG, API/MCP, HITL, page-agent) ve 25 Ekim'deki sonraki düzeltmeler için güvenilir başlangıç/bitiş kaydı tutulmadı |
 
-**İlk prompt (olduğu gibi):** İki aşamalı; ikisi de değiştirilmeden saklandı:
-1. Claude'a yazdığım ham ilk mesaj: [`prompt.md`](prompt.md) → Bölüm 1
-2. Bunun sonucunda coding agent'a verdiğim prompt: [`docs/prompts/00_first_prompt.md`](docs/prompts/00_first_prompt.md)
+**İlk prompt (olduğu gibi, yazım hataları dahil):** Claude'a (sohbet arayüzü) yazdığım ham ilk mesaj. Ekler: `odev.docx` (hocanın ödev metni) ve projenin canlı deploy ekran görüntüsü.
+
+> Ruby dersinde geliştirmeye başladığımız proje üzerinde yeni geliştirmeler yapmak üzere bu haftanın ödevini tamamlamam gerekiyor. Planlı şekilde gitmek istiyorum. Ne kadar zamanımı aldı, projemdeki yeni güncellemeler neler olmalı gibi bilgileri düzenli olarak tutmak istiyorum. Benim projem SentinelOps isminde, ServiceNow firmasının Incident Managament modülünü ele aldığım bir proje. Aslında kurumsal yapıların işletim sistemi tarzında bir adlandırmadan bahsedilen oldukça güçlü bir proje olabilir burası. Benim ilk ödev olarak atanan ödevde çok daha basit ve klasik kaldığımı anladım hocamın yorumlamasından. Ayrıca şuan insandan-insana şeklinde bir akış var içeride fakat çok daha güçlü olmasını istiyorum. Sana ödevi ve projemin canlı deployda şuanki görüntüsünü veriyorum ona göre durum analizi yapmanı ve agent ile geliştirmeye tekrar başlamayı istiyorum, bunun için de comprehensive bir prompt istiyorum senden. odev dokümanında ismim de var, Nisa. Oradan da hocamın bana tavsiyelerini uygulamak istiyorum.
+
+Kaynak dosyalar (değiştirilmeden saklandı):
+1. Bu ham ilk mesaj: [`prompt.md`](prompt.md) → Bölüm 1
+2. Bu mesajın sonucunda coding agent'a verdiğim ayrıntılı prompt: [`docs/prompts/00_first_prompt.md`](docs/prompts/00_first_prompt.md)
 
 Sonraki geri bildirimlerim: [`docs/prompts/01_phase7_feedback.md`](docs/prompts/01_phase7_feedback.md).
 
