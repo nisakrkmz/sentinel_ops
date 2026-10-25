@@ -1,6 +1,6 @@
 # AGENTS.md — SentinelOps
 
-> Bu dosya, repoda çalışan her coding agent için tek doğruluk kaynağıdır. `[KEŞFET]` işaretli yerleri agent Faz 0'da repodan doğrulayarak doldurur. Tahmin yazma.
+> Bu dosya, repoda çalışan her coding agent için tek doğruluk kaynağıdır. Değerler repodan doğrulanmıştır; bilmediğin şeyi tahmin yazma.
 
 ## Proje
 
@@ -10,7 +10,7 @@ SentinelOps, ServiceNow Incident Management modülünü ITIL v4 Service Operatio
 - Dil/çatı: Ruby 3.3.8, Rails 8.1.4
 - Veritabanı: SQLite3 (`storage/`; production yolu `DATABASE_PATH` ile değiştirilebilir)
 - Test çatısı: Rails Minitest (`test/`; `travel_to` ile zaman testleri)
-- Uygulama kodu bu depo kökündedir. `AGENT.md`, geçmiş geliştirme günlüğüdür; bu dosya proje talimatlarının kaynağıdır.
+- Uygulama kodu bu depo kökündedir. Hafta 1 geliştirme günlüğü `docs/history/WEEK1_DEV_LOG.md`; ödev kanıtı `CHALLENGE_LOG.md`; bu dosya proje talimatlarının kaynağıdır.
 
 ## Komutlar
 
@@ -34,7 +34,6 @@ bin/eval_rag         # gerçek RAG değerlendirmesi için EVAL_RAG_LIVE=1
 - Başlangıçta `bin/docker-entrypoint`, server komutuyla başlatıldığında `bundle exec rails db:prepare` ve `bundle exec rails db:seed` çalıştırır; `EMBEDDING_PROVIDER` tanımlıysa arka planda `bin/index_knowledge` ile KB indeksini yeniden kurar (disk kalıcı olmadığı için her açılışta gerekir; başarısız olursa açılışı bozmaz).
 - Sağlık kontrolü: `/healthz` (public JSON: DB durumu, sağlayıcıların yapılandırılıp yapılandırılmadığı ve model adı, KB indeks sayısı; anahtar/endpoint içermez) ve Rails'in `/up` rotası.
 - Not: Render ücretsiz katmanında servis boşta uyuyabilir. Sunumdan önce canlı URL'yi aç ve ısıt.
-- 2026-10-19 kontrolünde canlı URL 503 döndürdü. 2026-10-22'de `/`, `/up` ve `/healthz` istekleri 30 saniyede yanıt vermedi (HTTP 000); canlı demo ve mevcut Render deploy durumu doğrulanamadı.
 - Render tanımında kalıcı disk yok; production SQLite kalıcılığı garanti edilmemiştir. Canlı doğrulama için her fazdan sonra deploy'u bekle ve demo adımlarını çalıştır.
 
 ## Ortam değişkenleri (anahtarlar yalnızca sunucuda)
@@ -102,13 +101,13 @@ Gemini ücretsiz katmanında `gemini-2.5-flash` günlük ~20 istekle sınırlı 
 - Provider ENV yoksa UI "Provider beklemede" gösterir; credential paylaşmak için sohbete yapıştırma, yalnızca secret manager/Render server ENV kullan.
 - Kaynak ve limitler: [`docs/research/RAG_JEV_PAGE_AGENT.md`](docs/research/RAG_JEV_PAGE_AGENT.md).
 
-## Keşif durumu
+## Proje durumu
 
-- Son gözlenen repo commit'i: `40cb27a7948fa514cebf5854dda0ffe2d22cea11` (`Align project documentation and add logo`, 2026-10-19). Bu hash'in ödevde kastedilen "geçen hafta son commit'i" olduğu ayrıca doğrulanmış değildir.
-- Gerçek stack, veri modeli, matcher ve deploy bulguları `docs/AUDIT.md` içinde; ölçüm sınırlamaları `docs/baseline/README.md` içinde kayıtlıdır.
-- Başlangıç keşfi sırasındaki test sonucu WSL Ubuntu / Ruby 3.3.8 üzerinde `22 runs, 111 assertions, 0 failures, 0 errors, 0 skips` oldu. Windows host Ruby 3.3.12 ortamında Rails gem'i kurulu olmadığından test başlatılamadı.
-- Faz 1: actor attribution, hash'li API token, decision/handoff audit tabloları ve incident metadata eklendi. Render'da `AGENT_TOKEN_PEPPER` tanımlı değil; token işlemleri deploy ortamında etkin sayılmamalıdır.
-- Faz 2 triage provider'ı ve Faz 3 RAG adapter'ları generic HTTPS OpenAI-compatible endpoint bekler; gerçek provider/model uyumluluğunu secret ile canlı çağrı yapmadan varsayma.
+- Geçen haftanın (Hafta 1) son commit'i: [`40cb27a`](https://github.com/nisakrkmz/sentinel_ops/tree/40cb27a7948fa514cebf5854dda0ffe2d22cea11) (Nisa tarafından doğrulandı).
+- Stack, veri modeli ve deploy bulguları `docs/AUDIT.md`; varsayımlar `docs/ASSUMPTIONS.md`; araştırma `docs/research/RAG_JEV_PAGE_AGENT.md`.
+- Testler WSL Ubuntu / Ruby 3.3.8 üzerinde çalışır (`wsl.exe -e bash -lc 'cd /mnt/c/Users/korkm/Desktop/ruby/sentinel_ops && bin/rails test'`). Windows host Ruby'sinde Rails gem'leri kurulu değil. WSL'de sistem gem dizinine yazma izni yok; yeni gem eklemek `bundle install` gerektirir, bundan kaçın.
+- Render'da `AGENT_TOKEN_PEPPER` tanımlı değilse API/MCP token işlemleri canlıda etkin sayılmamalıdır.
+- Triage/RAG/Page Agent sağlayıcıları HTTPS OpenAI-compatible endpoint'lerdir; canlıda Google Gemini kullanılır. Jev adapter'ı hazırdır ama ücretli olduğu için canlı demoda kullanılmaz (bilinçli karar, `CHALLENGE_LOG.md` → Karar).
 - Faz 3 KB veri modeli yapılandırılmış 4-chunk makaleler ve SQLite JSON embedding'leri kullanır. 4 seed resolved incident + 20 açıkça `synthetic_seed` olarak işaretli makale vardır. Embed sağlayıcısı yoksa arama/çözüm önerisi disabled/pending kalır.
 - `bin/index_knowledge` onaylı makaleleri mevcut embedding provider/model ile indeksler; `--force` tüm vektörleri yeniler. `bin/eval_rag` varsayılan olarak canlı model ölçümü yapmaz; gerçek çağrı için `EVAL_RAG_LIVE=1` gerekir.
 - `bin/live_smoke` tek bir sentetik incident örneğini gerçek triage sağlayıcısına gönderir, veritabanına incident yazmaz ve sonucu API anahtarı/ticket metni olmadan `eval/live_runs/` altına JSON olarak kaydeder. Sağlayıcı yapılandırılmamışsa hata kodlu kayıt üretip non-zero ile çıkar.
@@ -135,12 +134,11 @@ Gemini ücretsiz katmanında `gemini-2.5-flash` günlük ~20 istekle sınırlı 
 ## Oturum protokolü (zaman takibi)
 
 1. Aktif çalışma başlangıcını ilk iş/araç çağrısında kaydet.
-2. `CHALLENGE_LOG.md` → **Zaman** tablosunda yalnızca görev üzerinde aktif çalışılan süreyi tut. Kullanıcı yanıtı bekleme, sohbet araları ve gece boyunca geçen süreyi dahil etme.
-3. Kullanıcı mesajları arasındaki bekleme sürelerini aktif süreden çıkar. Aktif süreyi araç/iş yapılan aralıkların toplamından hesapla; güvenilir ölçüm yoksa "ölçülemedi" yaz, tahmin etme.
-4. Kullanıcı insan süresini kendisi yazar; sorma veya tahmin etme.
-5. Kredi/token/maliyet takibi istenmiyor; bunları `CHALLENGE_LOG.md`'a ekleme.
-6. "Yapılanlar ve kanıt" tablosunu commit linki ve test komutuyla güncelle. Yapamadığını "Vaat edip yapamadıklarım" altına yaz.
-7. Kullanıcıdan yeni geliştirme geri bildirimi gelirse `docs/prompts/` altına numaralı dosya olarak ekle (`01_...md`).
+2. `CHALLENGE_LOG.md` → **Zaman** bölümü sade tutulur (Nisa'nın tercihi): faz faz tablo yok, yalnızca toplam insan süresi ve toplam agent süresi. Agent süresine yalnızca aktif çalışılan aralıkları ekle; kullanıcı bekleme sürelerini çıkar; ölçülemeyen oturumları "ölçülemedi" diye belirt, tahmin etme.
+3. Kullanıcı insan süresini kendisi verir; tahmin etme.
+4. Kredi/token/maliyet takibi istenmiyor; bunları `CHALLENGE_LOG.md`'a ekleme.
+5. `CHALLENGE_LOG.md` yalnızca ödevin istediği altı başlığı içerir (Başlangıç noktası, Acı, Bu haftanın vaadi, Yapılanlar ve kanıt, Zaman, Karar). Yeni kanıtı commit linki ve test komutuyla "Yapılanlar ve kanıt"a ekle; yapamadığını aynı bölümdeki "Vaat edip yapamadıklarım" altına yaz.
+6. Kullanıcıdan yeni geliştirme geri bildirimi gelirse `docs/prompts/` altına numaralı dosya olarak ekle (`01_...md`).
 
 ## Tanım: bitti
 

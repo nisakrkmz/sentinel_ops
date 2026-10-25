@@ -1,4 +1,4 @@
-# AGENT.md — SentinelOps Geliştirme ve Yapay Zekâ Eşliğinde Programlama Günlüğü
+# Hafta 1 — Geliştirme ve Yapay Zekâ Eşliğinde Programlama Günlüğü (eski adı: AGENT.md)
 
 > Bu dosya proje sahibinin geliştirme sürecine ilişkin notlarıdır; geçmiş oturum, model kullanımı ve maliyet iddiaları kod deposundan bağımsız olarak doğrulanamaz. G2 kullanıcı yorumu kanıtının ayrıntısı ve doğrulanmış test çıktısı için README'ye bakın.
 

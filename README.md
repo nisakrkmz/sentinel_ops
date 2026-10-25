@@ -11,6 +11,8 @@
 >
 > **GitHub Deposu:** [https://github.com/nisakrkmz/sentinel_ops](https://github.com/nisakrkmz/sentinel_ops)
 >
+> **Hafta 2 (agent-first):** Bu haftanın farkı, vaadi, kanıtları ve kararı [`CHALLENGE_LOG.md`](CHALLENGE_LOG.md) içindedir. Coding agent kuralları ve Render deploy bilgisi: [`AGENTS.md`](AGENTS.md).
+>
 > **İlham Kaynağı:** Bu proje, kurumsal BT dünyasının sektör standardı olan **ServiceNow (IT Service Management - Incident Management)** ürününün mimarisinden ve ITIL v4 operasyon standartlarından ilham alınarak geliştirilmiştir. Orijinal marka adı veya logosu uygulamada yer almaz.
 
 ---
@@ -81,15 +83,15 @@ Resolved (Çözüldü)
 
 ### 3. Minitest + `travel_to` Testleri
 
-22 test senaryosu Ubuntu/WSL ortamında 19 Ekim 2026 tarihinde çalıştırıldı: **22 runs, 111 assertions, 0 failures, 0 errors, 0 skips**. Ayrıca GitHub Actions CI, `b831627` commit'inde başarılı tamamlandı.
+Hafta 1 sonunda 22 test vardı (19 Ekim 2026, **22 runs, 111 assertions**). Hafta 2 sonunda tüm paket: **137 runs, 794 assertions, 0 failures** (Ubuntu/WSL, 25 Ekim 2026).
 
 ## Agent-first temeli — Faz 1
 
 Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` ile kayıt, `/login` ile e-posta + şifre girişi. Şifreler `users.password_digest` içinde tuzlu PBKDF2-HMAC-SHA256 (210.000 iterasyon) olarak saklanır; giriş denemeleri IP başına 10/dk ile sınırlıdır. Her kullanıcı bir `human` actor'a bağlıdır, UI'daki kayıt ve onaylar denetim izinde o kullanıcının actor'ına yazılır. Herkese açık demo instance için seed bir demo hesabı (`config/demo_operator.yml`) oluşturur ve giriş ekranında gösterir; `DEMO_OPERATOR_ENABLED=false` ile kapatılır. Eski `NISA_PASSWORD` mekanizması kaldırıldı. REST API ve MCP kendi scope'lu bearer token kimlik doğrulamasını kullanmaya devam eder.
 
-`ApiToken` ham bearer token'ı saklamaz; HMAC-SHA256 digest tutar, scope'ları sınırlar, kullanım zamanını izler ve iptal/süre sonu denetimi yapar. Token issue/auth çağrılarında `AGENT_TOKEN_PEPPER` sunucu ortamında tanımlı olmalıdır. Şu an bu token modellerini kullanan REST endpoint'i henüz yoktur. `Decision` ve `Handoff` tabloları audit/provenance ve insana devir kayıtları için eklenmiştir; henüz AI sağlayıcısı veya workflow bu kayıtları otomatik oluşturmuyor.
+`ApiToken` ham bearer token'ı saklamaz; HMAC-SHA256 digest tutar, scope'ları sınırlar, kullanım zamanını izler ve iptal/süre sonu denetimi yapar. Token issue/auth çağrılarında `AGENT_TOKEN_PEPPER` sunucu ortamında tanımlı olmalıdır. Bu token'ları REST API ve MCP kullanır (Faz 4). `Decision` ve `Handoff` tabloları her model/politika kararını ve insana devri denetim izi olarak tutar; agent workflow bu kayıtları otomatik oluşturur.
 
-`render.yaml` şu anda `AGENT_TOKEN_PEPPER`'ı tanımlamıyor. Token işlemleri herhangi bir deployed API'de etkinleştirilmeden önce Render server environment'a güçlü bir pepper eklenmelidir.
+`render.yaml` `AGENT_TOKEN_PEPPER`'ı tanımlamaz; API token'ı kullanılacaksa Render panelinde güçlü bir pepper tanımlanmalıdır.
 
 ## Typed incident triage — Faz 2
 
@@ -98,7 +100,7 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 - `DECISION_REASONING_EFFORT` / `LLM_REASONING_EFFORT` isteğe bağlıdır; ayarlanmazsa `reasoning_effort` gönderilmez (yeni Gemini modelleri `none` değerine HTTP 400 döndürüyor).
 - Provider yoksa/başarısızsa kayıt yine oluşur, `triage_status=pending` kalır ve başarısız deneme hata koduyla `decisions` tablosuna audit edilir; sahte öncelik/cevap üretilmez.
 - Ticket metni model isteğinde açıkça güvenilmeyen veri olarak taşınır. Sadece JSON Schema'yı doğrulayan tipli çıktı incident'i günceller; modelin eylem talimatları yürütebileceği bir araç bu fazda yoktur.
-- Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Faz 3 Incident Memory/RAG akışı eklendi; gerçek embedding/LLM sağlayıcısı yapılandırılmadan indeksleme ve canlı öneri beklemededir.
+- Keyword baseline yalnızca `eval/baselines/keyword_baseline.rb` içindedir; canlı matcher/tek tıkla geçmiş çözüm akışı kaldırılmıştır. Faz 3 Incident Memory/RAG akışı eklendi; sağlayıcı yapılandırılmamışsa indeksleme ve öneri dürüstçe beklemede kalır.
 - `ruby bin/eval_triage` 40 etiketli TR/EN örnekte yalnızca baseline'ı çalıştırır. Gerçek model karşılaştırması açıkça `EVAL_LIVE=1 ruby bin/eval_triage` ve gerçek provider config gerektirir; anahtarsız eval model metriği uydurmaz. Güncel rapor: [`eval/RESULTS.md`](eval/RESULTS.md).
 - `bin/live_smoke`, gerçek triage provider'ına tek bir sentetik örnek gönderir; incident'i veritabanına kaydetmeden şema doğrulamalı sonucu `eval/live_runs/` altına yazar. `DECISION_PROVIDER`, `DECISION_API_KEY`, `DECISION_MODEL` ve HTTPS `DECISION_BASE_URL` sunucu ortamında tanımlı olmalıdır. Provider hatasında hata kodu kaydedilir ve komut non-zero döner.
 
@@ -133,7 +135,7 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 - Agent tarafından üretilen resolution yalnızca onaylı KB chunk citation'larıyla çözüm aşamasına geçebilir. İnsan onayı/düzeltmesi olayı kapatabilir; opsiyonel verification girilirse çözüm `kb_candidates` kuyruğuna kaydedilir. Red ve düzeltme feedback'i `decisions` audit izine yazılır.
 - `/handoffs` açık onay/devir kuyruğudur; incident detail'deki **Agent Run Trace** kararları, sağlayıcı/model, güven, kaynaklar ve HITL sonucunu gösterir. Üst çubuk kayıtlı aktif agent kimliklerini ve açık handoff sayısını gösterir.
 - Kurumsal Simülasyon gerçek incident ve audit/handoff kayıtları üretir, `SentinelOps Monitoring Agent` actor'ıyla açılır. Dış izleme sistemine/API'ye çağrı yaptığı iddia edilmez. Simülasyon kaynaklı aksiyonlar UI'da **SİMÜLASYON** etiketi taşır.
-- Test kapsamı provider yokluğu, needs-human triage, P1 onay, grounded P3 auto-resolve ve insan onay/red akışlarını içerir. Gerçek sağlayıcı anahtarı olmadan bu canlı akış/eval ölçülmüş sayılmaz.
+- Test kapsamı provider yokluğu, needs-human triage, P1 onay, grounded P3 auto-resolve ve insan onay/red akışlarını içerir. Gerçek sağlayıcıyla (Gemini) triage → RAG → policy → devir akışı 25 Ekim 2026'da lokal olarak uçtan uca çalıştırıldı.
 
 ## Page Agent copilot — Faz 6
 
@@ -143,10 +145,10 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 - page-agent'ın `interactiveWhitelist` seçeneği yalnızca eleman *ekler*, kısıtlamaz. Bu yüzden her adımdan önce `data-agent-id` taşımayan tüm etkileşimli elemanlar (ve Copilot paneli) `interactiveBlacklist`'e konur; böylece Çöz/Onayla/Reddet gibi kontroller gerçekten erişilemez. Adımlar süren Turbo geçişini bekler ve agent'ın sentetik link tıklamaları Turbo üzerinden yönlendirilir (aksi halde kopuk DOM elemanına tıklayıp sayfayı yeniden yüklüyordu).
 - Durum değiştiren işlemlerin onay diyaloğu yalnızca bir Copilot görevi çalışırken çıkar; insan kendisi tıkladığında araya girmez. Formdaki Copilot uyarısı kaldırıldı; bunun yerine her sayfanın üstünde "Page Agent sizin için şunları yapabilir" alanı var. Örnek görev çipleri page-agent panelini açar ve görevi panelin giriş kutusuna yazar; çalıştırmak için Enter'a basılır. Sağlayıcı yoksa alan "Beklemede" olarak pasif görünür.
 - In-page copilot, yalnızca `data-agent-id` olan kontrolleri kullanır; `execute_javascript` aracı kapalıdır. Yeni incident formunu doldurup gönderebilir, ancak gönderimden önce tarayıcıda insan onayı zorunludur. İnsan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu da onaydan sonra çalıştırabilir; bu yalnızca uygulama içinde etiketli demo kaydı oluşturur, dış sisteme dokunmaz. Yeni kayıt için başlangıç atama grubunu yalnızca insan açıkça belirtirse değiştirir; mevcut incident'ları değiştiremez veya yeniden atayamaz. Caller alanları, e-posta ve telefonlar browser custom-fetch hook'unda, ayrıca DB'deki caller adları server proxy'de maskelenir.
-- `POST /page-agent/v1/chat/completions` Rails CSRF/same-origin koruması, IP başına 30 req/dk rate limit (12 adımlık bir görev + retry 10/dk sınırına takılıyordu)'i, 64 KiB request, 1,200 completion token ve 8 sn provider read timeout'u uygular. Çoklu instance için rate-limit cache'i shared cache'e taşınmalıdır.
+- `POST /page-agent/v1/chat/completions` Rails CSRF/same-origin koruması, IP başına 30 req/dk rate limit (12 adımlık bir görev + retry 10/dk sınırına takılıyordu), 64 KiB request, 1,200 completion token ve 8 sn provider read timeout'u uygular. Çoklu instance için rate-limit cache'i shared cache'e taşınmalıdır.
 - Provider upstream çağrısı başarısız olursa logda yalnızca HTTP status yazılır (anahtar/yanıt gövdesi değil); copilot panelinde 401/403 kimlik-model erişimi, 404 model/endpoint, 429 kota/rate limit, 400 istek/tool-calling uyumsuzluğu ve 5xx geçici sağlayıcı hatası için ayrı açıklama gösterilir.
 - Rails request loglarında Page Agent `messages`, `content` ve `tools` gövdeleri `FILTERED` olarak maskelenir; bilet sayfa içeriği loglarda tutulmaz.
-- Copilot read/search/navigation yapabilir, yeni incident formunu insanın açık isteği üzerine doldurup gönderebilir ve insan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu çalıştırabilir; her iki işlemden önce tarayıcı onayı zorunludur. Simülasyon yalnızca SİMÜLASYON etiketli uygulama kaydı üretir. Yeni kayıt için başlangıç atama grubu ancak insan açıkça isterse ayarlanır. Mevcut incident'ları değiştirme/yeniden atama, çözme, onaylama/reddetme yetkisi yoktur. Groq HTTP 400/429 bu oturumda form/tool isteğinin reddedildiğini ve quota/rate-limit durumunu gösterdi; sağlayıcı düzelmeden hiçbir copilot görevi çalışmış sayılmaz.
+- Copilot read/search/navigation yapabilir, yeni incident formunu insanın açık isteği üzerine doldurup gönderebilir ve insan açıkça simülasyon istediğinde SAP Kurumsal Simülasyonunu çalıştırabilir; her iki işlemden önce tarayıcı onayı zorunludur. Simülasyon yalnızca SİMÜLASYON etiketli uygulama kaydı üretir. Yeni kayıt için başlangıç atama grubu ancak insan açıkça isterse ayarlanır. Mevcut incident'ları değiştirme/yeniden atama, çözme, onaylama/reddetme yetkisi yoktur. 25 Ekim 2026'da gerçek Gemini (`gemini-flash-lite-latest`) ile Chrome'da doğrulandı: KB araması ve yeni bilet oluşturma görevleri sayfa geçişleri boyunca tamamlandı.
 
 ---
 
@@ -163,7 +165,7 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 
 ### 2. SentinelOps çözümü: Incident Memory
 - Önceki Smart Incident Knowledge Matcher, servis/kategori ve sözcük benzerliği puanlayan deterministik bir heuristikti; "AI" değildi ve Faz 2'de uygulama akışından kaldırıldı. Keyword baseline yalnızca eval karşılaştırması içindir.
-- Faz 3'te Incident Memory semantik embedding retrieval ve kaynaklı çözüm önerisi için yapılandırıldı. Sağlayıcı anahtarı/indeksi olmadan canlı semantik eşleşme veya model başarısı iddia edilmez.
+- Faz 3'te Incident Memory semantik embedding retrieval ve kaynaklı çözüm önerisi için yapılandırıldı ve gerçek Gemini embedding'i ile çalıştırıldı. Sağlayıcı/indeks yoksa model başarısı iddia edilmez.
 - Çözüm önerisi tek tıkla uygulanmaz; her adım kaynakla gösterilir ve insan incelemesi gerekir. İnsan tarafından çözülen vakalar, onaylanana kadar KB'ye eklenmez.
 
 ### 3. Sunumda Tek Cümlelik Pas Formülü
@@ -186,7 +188,7 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 
 1. **Active Directory / LDAP Canlı Entegrasyonu:** Gerçek bir Microsoft Domain Controller yerine kurumsal SSO Kerberos senkronizasyonu simüle edilmiş ve JWT formatında hata fırlatılmıştır.
 2. **İki Yönlü E-Posta Dönüştürücü (Inbound Email Parsing):** Kullanıcıların e-posta atarak bilet açması veya e-posta yanıtıyla bilet güncellemesi için SMTP/IMAP worker servisi kurulmamış; biletler web formu ve simülasyon motoru ile üretilmektedir.
-3. **Rol Tabanlı Erişim Kontrolü (RBAC):** Web UI Nisa için tek operatör oturumu ve sunucu tarafında yapılandırılmış parola kullanır; çoklu kullanıcı/rol matrisi veya self-service kayıt akışı yoktur. API/MCP scope'ları web oturumundan bağımsızdır.
+3. **Rol Tabanlı Erişim Kontrolü (RBAC):** Web UI DB'ye bağlı çoklu operatör hesabı ve self-service kayıt destekler, ancak rol matrisi yoktur; her operatör aynı yetkilere sahiptir. API/MCP scope'ları web oturumundan bağımsızdır.
 4. **Çok Dilli Sözlük (i18n):** Kurumsal ITIL jargonu gereği terimler (P1-P4, SLA Breached, In Progress) küresel ServiceNow standardı olan İngilizce/Türkçe hibrit formatta bırakılmıştır.
 5. **Arka plan SLA zamanlayıcısı:** İhlal kontrolü istek sırasında yapılır; periyodik worker/cron kurulmadı. Uzun süre hiç açılmayan kayıt, sayfa/aksiyon isteği gelene kadar işaretlenmez.
 6. **Canlı deploy ve CI kanıtı:** Render deploy'u `23aa422` commit'inde başarılı oldu ve canlı URL HTTP 200 döndürdü. GitHub Actions CI, README ve G2 ekran görüntüsü eklenen `b831627` commit'inde de başarılı tamamlandı. Render servisi ücretsiz planda olduğundan boşta kalınca uyuyabilir; ilk isteğin yanıtı gecikebilir.
@@ -202,8 +204,7 @@ Web arayüzü veritabanına bağlı operatör hesapları kullanır: `/signup` il
 # Model, SLA travel_to ve Controller testlerinin tamamı:
 bin/rails test
 
-# Son doğrulama: 22 runs, 111 assertions, 0 failures, 0 errors, 0 skips (Ubuntu/WSL, 2026-10-19).
-# Agent-first Faz 1 doğrulaması: 35 runs, 163 assertions (Ubuntu/WSL, 2026-10-20).
+# Son doğrulama: 137 runs, 794 assertions, 0 failures, 0 errors, 0 skips (Ubuntu/WSL, 2026-10-25).
 ```
 
 ---
@@ -231,4 +232,4 @@ Sağlayıcı anahtarları yalnızca git-ignored `.env` (lokal) veya Render panel
 
 ## 🤖 Geliştirme Süreci
 
-Ajan ile çalışma notları, karşılaşılan krizler ve rol dağılımı için bkz. [AGENT.md](./AGENT.md).
+Hafta 1'in ajan ile çalışma notları: [docs/history/WEEK1_DEV_LOG.md](docs/history/WEEK1_DEV_LOG.md). Hafta 2 süreci, zaman ve karar: [CHALLENGE_LOG.md](CHALLENGE_LOG.md). Coding agent talimatları: [AGENTS.md](AGENTS.md).
