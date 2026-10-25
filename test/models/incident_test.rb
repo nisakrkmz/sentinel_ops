@@ -236,5 +236,4 @@ class IncidentTest < ActiveSupport::TestCase
       assert_equal "sla_breached", incident.sla_status
     end
   end
-
 end
