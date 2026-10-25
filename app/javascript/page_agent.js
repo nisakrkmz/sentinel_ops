@@ -15,7 +15,6 @@ const INTERACTIVE_SELECTOR = [
 const RUNTIME_SELECTOR = '[id^="page-agent-runtime"]'
 const ALLOWED_PATH = /^\/(?:|incidents(?:\/[^/]+)?|knowledge(?:\/[^/]+)?|handoffs)$/
 const STORAGE_KEYS = {
-  activated: "sentinel.copilot.activated",
   open: "sentinel.copilot.open",
   resume: "sentinel.copilot.resume",
 }
@@ -265,10 +264,6 @@ function setOpen(open) {
   root.dataset.state = open ? "open" : "closed"
   root.querySelector("[data-copilot-toggle]")?.setAttribute("aria-expanded", String(open))
   writeStore(STORAGE_KEYS.open, open)
-  if (open) {
-    writeStore(STORAGE_KEYS.activated, true)
-    applyActivation()
-  }
 }
 
 function openPanel() {
@@ -283,12 +278,25 @@ function closePanel() {
   setOpen(false)
 }
 
-function applyActivation() {
-  const activated = readStore(STORAGE_KEYS.activated, false) === true
-  document.querySelectorAll("[data-copilot-hint]").forEach((hint) => {
-    hint.hidden = !activated
-  })
+// Capability banner: "Copilot'u aç" opens the panel; an example chip opens it
+// and pre-fills page-agent's own task input so the human reviews and presses Enter.
+function prefillTask(task) {
+  const input = document.querySelector("#page-agent-runtime_agent-panel input, #page-agent-runtime_agent-panel textarea")
+  if (!input || agent?.status === "running") return
+  input.value = task
+  input.dispatchEvent(new Event("input", { bubbles: true }))
+  input.focus()
 }
+
+document.addEventListener("click", (event) => {
+  const target = event.target instanceof Element ? event.target : null
+  const trigger = target?.closest("[data-copilot-open], [data-copilot-suggestion]")
+  if (!trigger || !enabled()) return
+  event.preventDefault()
+  if (launcher()?.dataset.state !== "open") openPanel()
+  const task = trigger.dataset.copilotSuggestion
+  if (task) window.setTimeout(() => prefillTask(task), 150)
+})
 
 function bindLauncher() {
   const root = launcher()
@@ -332,7 +340,6 @@ function resumeAfterReload() {
 
 function boot() {
   bindLauncher()
-  applyActivation()
   if (readStore(STORAGE_KEYS.open, false) === true && enabled() && !agent) openPanel()
   resumeAfterReload()
 }

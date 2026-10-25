@@ -20,9 +20,13 @@ class CopilotLayoutTest < ActionDispatch::IntegrationTest
     assert_select "a[data-agent-id='handoff-queue-navigation']"
   end
 
-  test "new incident form does not show the copilot hint when the copilot is unavailable" do
-    get new_incident_url
+  test "every workspace page shows the Page Agent capability banner, honestly disabled without a provider" do
+    [ root_url, new_incident_url, knowledge_articles_url, handoffs_url ].each do |url|
+      get url
 
+      assert_select ".copilot-banner.is-disabled", text: /Page Agent sizin için şunları yapabilir/
+      assert_select ".copilot-banner button[data-copilot-suggestion][disabled]", minimum: 3
+    end
     assert_select "[data-copilot-hint]", count: 0
   end
 end

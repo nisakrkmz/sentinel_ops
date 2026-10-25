@@ -49,8 +49,9 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     get new_incident_path
 
     assert_response :success
-    # Rendered hidden; page_agent.js reveals it only after the copilot was opened in this session.
-    assert_select ".info-banner[data-copilot-hint][hidden]", text: /Page Agent Copilot bu formu senin adına doldurup gönderebilir/
+    assert_select "[data-copilot-hint]", count: 0
+    assert_select ".copilot-banner:not(.is-disabled)", text: /Page Agent sizin için şunları yapabilir/
+    assert_select ".copilot-banner button[data-copilot-suggestion]:not([disabled])", minimum: 3
     assert_select "#sentinel-copilot[data-copilot-enabled='true'] button.copilot-fab:not([disabled])", text: /Page Agent Copilot/
   end
 

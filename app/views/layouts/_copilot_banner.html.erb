@@ -1,0 +1,40 @@
+<%# Her sayfada görünen Page Agent yetenek alanı. Örnek görevler Copilot panelini açar
+    ve görevi page-agent'ın kendi giriş kutusuna yazar; çalıştırmak için Enter'a basılır. %>
+<% enabled = PageAgentProxy.configured? %>
+<section class="copilot-banner <%= 'is-disabled' unless enabled %>" aria-labelledby="copilot-banner-title">
+  <div class="copilot-banner-glow" aria-hidden="true"></div>
+  <div class="copilot-banner-intro">
+    <span class="copilot-banner-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>
+      <span class="copilot-banner-live"></span>
+    </span>
+    <div>
+      <p class="copilot-banner-eyebrow"><%= enabled ? "Page Agent Copilot · Canlı" : "Page Agent Copilot · Beklemede" %></p>
+      <h2 id="copilot-banner-title">Page Agent sizin için şunları yapabilir</h2>
+      <p class="copilot-banner-text">
+        <% if enabled %>
+          Doğal dille yazın; agent ekranı sizin gördüğünüz gibi okur, imleçle tıklar ve formları doldurur. Kayıt oluşturan adımlar sizin onayınızı ister.
+        <% else %>
+          Sunucuda Page Agent sağlayıcısı yapılandırıldığında burası etkinleşir. Şu an sahte cevap üretilmez.
+        <% end %>
+      </p>
+    </div>
+  </div>
+
+  <div class="copilot-banner-actions" role="list">
+    <% [
+      [ "🔎", "KB'de çözüm ara", "Knowledge Base'de VPN IP havuzu tükenmesiyle ilgili kayıtları bul" ],
+      [ "📝", "Bilet oluştur", "Yeni bir bilet aç: Outlook masaüstü istemcisi tek bir kullanıcıda açılmıyor. Öncelik P4." ],
+      [ "🚨", "P1 olayları listele", "Açık P1 major incident'ları göster" ],
+      [ "✅", "Onay kuyruğunu aç", "Onay kuyruğunu aç ve bekleyen kayıtları özetle" ]
+    ].each do |icon, label, task| %>
+      <button type="button" class="copilot-banner-chip" role="listitem" data-copilot-suggestion="<%= task %>" <%= "disabled" unless enabled %>>
+        <span aria-hidden="true"><%= icon %></span><%= label %>
+      </button>
+    <% end %>
+    <button type="button" class="copilot-banner-cta" data-copilot-open <%= "disabled" unless enabled %>>
+      Copilot'u aç
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </button>
+  </div>
+</section>
