@@ -14,3 +14,9 @@ Nisa'nın coding agent'a yazdığı mesaj (olduğu gibi, yazım hataları dahil)
 | Giriş | Sunucu ENV şifresi kaldırıldı; DB'ye bağlı e-posta/şifre hesapları (kayıt + giriş), seed'de demo hesabı. |
 | Copilot butonu | Sağ altta yüzen, tıklayınca yükselen sohbet paneli. |
 | Form uyarısı | Yalnızca Copilot bu oturumda açıldıysa görünür. |
+
+## Ek geri bildirim (2026-10-25, aynı oturum)
+
+> Tamam, dediklerin oldu. Fakat page agent için şeyi değiştirmişsin, hani Ali baba da olduğu gibi orijinal hali ile kalsın. İşte ekranda hareket eden ok u göreyim. Ya da en altta arama yapma kısmını göreyim. Yine şuan olduğu gibi sağ altta olsun o copilot butonu fakat page agent copilot yazsın. Hem de dediğim gibi orijinal görünmde kalsın  uyum açısından. Gerçekten pag agent çalışıyor dimi
+
+Karar: Özel sohbet paneli kaldırıldı; sağ alttaki "Page Agent Copilot" butonu page-agent'ın orijinal panelini ve imleç maskesini açıyor. Güvenlik katmanı (allowlist, PII maskeleme, proxy, onay, Turbo uyumu) korundu.

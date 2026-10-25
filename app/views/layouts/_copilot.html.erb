@@ -1,66 +1,16 @@
-<%# Page Agent Copilot: sağ altta yüzen başlatıcı + açılan sohbet paneli.
-    data-turbo-permanent ile sayfa geçişlerinde sohbet ve çalışan görev korunur. %>
+<%# Page Agent Copilot başlatıcısı (sağ alt). Tıklanınca Alibaba page-agent'ın orijinal
+    paneli (alt ortadaki görev çubuğu) ve ekranda hareket eden imleç kullanılır.
+    data-turbo-permanent: sayfa geçişlerinde başlatıcı ve durum korunur. %>
 <div id="sentinel-copilot" class="copilot" data-turbo-permanent data-copilot
      data-copilot-enabled="<%= PageAgentProxy.configured? %>" data-state="closed">
-  <section class="copilot-panel" id="copilot-panel" role="dialog" aria-modal="false" aria-labelledby="copilot-title" hidden>
-    <header class="copilot-header">
-      <div class="copilot-header-title">
-        <span class="copilot-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>
-        </span>
-        <div>
-          <h2 id="copilot-title">Page Agent Copilot</h2>
-          <p class="copilot-status" data-copilot-status>
-            <span class="copilot-status-dot"></span>
-            <span data-copilot-status-text><%= PageAgentProxy.configured? ? "Hazır" : "Provider beklemede" %></span>
-          </p>
-        </div>
-      </div>
-      <div class="copilot-header-actions">
-        <button type="button" class="copilot-icon-button" data-copilot-clear aria-label="Sohbeti temizle" title="Sohbeti temizle">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        </button>
-        <button type="button" class="copilot-icon-button" data-copilot-close aria-label="Copilot panelini kapat" title="Kapat">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-    </header>
-
-    <div class="copilot-body" data-copilot-log aria-live="polite">
-      <div class="copilot-welcome">
-        <p><strong>Merhaba!</strong> Ekranda gördüğün SentinelOps arayüzünü doğal dille kullanabilirim: arama, gezinme, form doldurma.</p>
-        <% unless PageAgentProxy.configured? %>
-          <p class="copilot-warning">Sunucuda Page Agent sağlayıcısı yapılandırılmadığı için şu an görev çalıştıramıyorum. Sahte cevap üretmiyorum.</p>
-        <% end %>
-        <div class="copilot-suggestions" role="list">
-          <button type="button" class="copilot-chip" role="listitem" data-copilot-suggestion="Knowledge Base'de VPN IP havuzu tükenmesiyle ilgili kayıtları bul">VPN çözümlerini KB'de bul</button>
-          <button type="button" class="copilot-chip" role="listitem" data-copilot-suggestion="Açık P1 major incident'ları göster">P1 olayları göster</button>
-          <button type="button" class="copilot-chip" role="listitem" data-copilot-suggestion="Yeni bir bilet aç: Outlook masaüstü istemcisi tek kullanıcıda açılmıyor, P4, Email & Collaboration">Yeni bilet oluştur</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="copilot-ask" data-copilot-ask hidden>
-      <p class="copilot-ask-question" data-copilot-ask-question></p>
-    </div>
-
-    <form class="copilot-composer" data-copilot-form>
-      <label class="visually-hidden" for="copilot-input">Copilot'a görev yaz</label>
-      <textarea id="copilot-input" rows="1" maxlength="600" placeholder="<%= PageAgentProxy.configured? ? 'Ne yapmamı istersin?' : 'Provider beklemede' %>" data-copilot-input <%= "disabled" unless PageAgentProxy.configured? %>></textarea>
-      <button type="submit" class="copilot-send" data-copilot-send aria-label="Gönder" <%= "disabled" unless PageAgentProxy.configured? %>>
-        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" data-icon-send><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" data-icon-stop hidden><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
-      </button>
-    </form>
-    <p class="copilot-footnote">Kişisel veriler modele gitmeden maskelenir · Kayıt oluşturan işlemler senin onayını ister</p>
-  </section>
-
-  <button type="button" class="copilot-fab" data-copilot-toggle aria-expanded="false" aria-controls="copilot-panel" aria-label="Page Agent Copilot'u aç">
+  <button type="button" class="copilot-fab" data-copilot-toggle aria-expanded="false"
+          aria-label="<%= PageAgentProxy.configured? ? 'Page Agent Copilot' : 'Page Agent Copilot · Provider beklemede' %>"
+          title="<%= PageAgentProxy.configured? ? 'Page Agent Copilot' : 'Sunucuda Page Agent sağlayıcısı yapılandırılmadı' %>"
+          <%= "disabled" unless PageAgentProxy.configured? %>>
     <span class="copilot-fab-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-fab-open><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" data-fab-close hidden><polyline points="6 9 12 15 18 9"/></svg>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 3v4"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/></svg>
     </span>
-    <span class="copilot-fab-label">Copilot</span>
+    <span class="copilot-fab-label"><%= PageAgentProxy.configured? ? "Page Agent Copilot" : "Page Agent · beklemede" %></span>
     <span class="copilot-fab-pulse" aria-hidden="true"></span>
   </button>
 </div>

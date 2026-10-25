@@ -51,7 +51,7 @@ class PageAgentProxyControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Rendered hidden; page_agent.js reveals it only after the copilot was opened in this session.
     assert_select ".info-banner[data-copilot-hint][hidden]", text: /Page Agent Copilot bu formu senin adına doldurup gönderebilir/
-    assert_select "#sentinel-copilot[data-copilot-enabled='true'] textarea:not([disabled])"
+    assert_select "#sentinel-copilot[data-copilot-enabled='true'] button.copilot-fab:not([disabled])", text: /Page Agent Copilot/
   end
 
   test "rejects cross-origin requests and models outside the configured allowlist" do

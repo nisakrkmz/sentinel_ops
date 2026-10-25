@@ -2538,17 +2538,6 @@ a:hover {
   animation: copilot-pulse 1.2s ease-in-out infinite;
 }
 
-.copilot[data-state="open"] .copilot-fab {
-  padding: 0;
-  width: 52px;
-  justify-content: center;
-}
-
-.copilot[data-state="open"] .copilot-fab-label,
-.copilot[data-state="open"] .copilot-fab-pulse {
-  display: none;
-}
-
 .copilot-panel {
   width: min(400px, calc(100vw - 2rem));
   height: min(600px, calc(100vh - 7.5rem));
@@ -2860,29 +2849,6 @@ html[data-page-agent-task-active="true"] .app-container {
     right: 1rem;
     bottom: 1rem;
   }
-  .copilot[data-state="open"] {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    gap: 0;
-  }
-  .copilot[data-state="open"] .copilot-panel {
-    width: 100%;
-    height: min(82vh, calc(100vh - 3.5rem));
-    border-radius: 18px 18px 0 0;
-    transform-origin: bottom center;
-  }
-  .copilot[data-state="open"] .copilot-fab {
-    display: none;
-  }
-  .copilot-fab-label {
-    display: none;
-  }
-  .copilot-fab {
-    width: 52px;
-    padding: 0;
-    justify-content: center;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2922,8 +2888,21 @@ html[data-page-agent-task-active="true"] .app-container {
   }
 }
 
-/* page-agent runs headless behind our copilot panel: hide its own UI and debug highlights. */
-#page-agent-runtime_agent-panel,
-#playwright-highlight-container {
-  display: none !important;
+/* Launcher state while page-agent's own task panel is open. */
+.copilot[data-state="open"] .copilot-fab {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.45), 0 10px 28px rgba(30, 58, 138, 0.35);
+}
+
+.copilot-fab:disabled {
+  cursor: not-allowed;
+  background: #64748b;
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  /* page-agent's panel sits bottom-center; lift the launcher above it on phones. */
+  .copilot[data-state="open"] {
+    bottom: 6.5rem;
+  }
 }
