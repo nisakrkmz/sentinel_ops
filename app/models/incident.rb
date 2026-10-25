@@ -308,9 +308,11 @@ class Incident < ApplicationRecord
   def generate_ticket_number
     return if number.present?
 
-    # ServiceNow INC001024 formatında kurumsal bilet numarası üretimi
+    # ServiceNow INC001024 formatında kurumsal bilet numarası üretimi. Seed'deki sabit
+    # numaralarla çakışmaması için en büyük mevcut numaradan devam edilir.
+    last_number = Incident.where("number LIKE 'INC%'").pluck(:number).map { |value| value.delete_prefix("INC").to_i }.max || 0
     last_id = Incident.maximum(:id) || 0
-    self.number = sprintf("INC%06d", last_id + 1001)
+    self.number = sprintf("INC%06d", [ last_number, last_id + 1000 ].max + 1)
   end
 
   def set_sla_and_defaults

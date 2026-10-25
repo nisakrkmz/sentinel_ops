@@ -29,6 +29,15 @@ class IncidentTest < ActiveSupport::TestCase
     assert_not_nil incident.sla_deadline
   end
 
+  test "generated ticket numbers never collide with fixed seed numbers" do
+    base = { short_description: "Seeded", service_affected: "SAP ERP", priority: :p3_moderate, requested_by: "Caller" }
+    seeded = Incident.create!(base.merge(number: sprintf("INC%06d", (Incident.maximum(:id) || 0) + 1002)))
+
+    generated = Incident.create!(base)
+
+    assert_equal seeded.number.delete_prefix("INC").to_i + 1, generated.number.delete_prefix("INC").to_i
+  end
+
   test "incident receives a demo actor and triage defaults while preserving idempotency uniqueness" do
     first = Incident.create!(
       short_description: "Database connection saturation",
@@ -236,5 +245,4 @@ class IncidentTest < ActiveSupport::TestCase
       assert_equal "sla_breached", incident.sla_status
     end
   end
-
 end
