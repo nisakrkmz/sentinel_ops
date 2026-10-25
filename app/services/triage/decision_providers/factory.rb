@@ -15,7 +15,8 @@ module Triage
           provider: provider,
           api_key: ENV["DECISION_API_KEY"],
           model: ENV["DECISION_MODEL"],
-          endpoint: ENV["DECISION_BASE_URL"]
+          endpoint: ENV["DECISION_BASE_URL"],
+          reasoning_effort: ENV["DECISION_REASONING_EFFORT"]
         )
       end
     end

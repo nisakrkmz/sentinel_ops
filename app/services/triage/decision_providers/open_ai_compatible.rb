@@ -11,15 +11,20 @@ module Triage
 
       attr_reader :provider, :model
 
-      def initialize(provider:, api_key:, model:, endpoint:)
+      def initialize(provider:, api_key:, model:, endpoint:, reasoning_effort: nil)
         @provider = provider
         @api_key = api_key
         @model = model
         @endpoint = endpoint
+        @reasoning_effort = reasoning_effort.presence
       end
 
       def configured?
         @api_key.present? && @model.present? && @endpoint.present?
+      end
+
+      def prompt_version
+        PROMPT_VERSION
       end
 
       def call(incident)
@@ -102,7 +107,7 @@ module Triage
         request.body = JSON.generate(
           model: @model,
           temperature: 0,
-          **(@provider.to_s == "gemini" ? { reasoning_effort: "none" } : {}),
+          **(@reasoning_effort ? { reasoning_effort: @reasoning_effort } : {}),
           response_format: {
             type: "json_schema",
             json_schema: {

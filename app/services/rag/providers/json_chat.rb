@@ -10,11 +10,12 @@ module Rag
 
       attr_reader :provider, :model
 
-      def initialize(provider:, api_key:, model:, endpoint:)
+      def initialize(provider:, api_key:, model:, endpoint:, reasoning_effort: nil)
         @provider = provider
         @api_key = api_key
         @model = model
         @endpoint = endpoint
+        @reasoning_effort = reasoning_effort.presence
       end
 
       def configured?
@@ -76,7 +77,7 @@ module Rag
         request.body = JSON.generate(
           model: @model,
           temperature: 0,
-          **(@provider.to_s == "gemini" ? { reasoning_effort: "none" } : {}),
+          **(@reasoning_effort ? { reasoning_effort: @reasoning_effort } : {}),
           response_format: {
             type: "json_schema",
             json_schema: { name: schema_name, strict: true, schema: schema }

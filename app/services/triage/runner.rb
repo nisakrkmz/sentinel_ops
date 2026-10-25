@@ -53,9 +53,10 @@ module Triage
             kind: :triage,
             provider: @provider.provider,
             model: @provider.model,
-            prompt_version: DecisionProviders::OpenAiCompatible::PROMPT_VERSION,
+            prompt_version: prompt_version,
             input_digest: digest,
             output_json: output,
+            confidence: @provider.respond_to?(:last_confidence) ? @provider.last_confidence : nil,
             latency_ms: latency_ms,
             sources: []
           )
@@ -70,7 +71,7 @@ module Triage
         kind: :triage,
         provider: @provider&.provider.presence || "unconfigured",
         model: @provider&.model,
-        prompt_version: DecisionProviders::OpenAiCompatible::PROMPT_VERSION,
+        prompt_version: prompt_version,
         input_digest: input_digest,
         output_json: {},
         latency_ms: latency_ms,
@@ -80,6 +81,10 @@ module Triage
       )
       @incident.update!(triage_status: :pending)
       decision
+    end
+
+    def prompt_version
+      @provider.respond_to?(:prompt_version) ? @provider.prompt_version : DecisionProviders::OpenAiCompatible::PROMPT_VERSION
     end
 
     def triage_actor

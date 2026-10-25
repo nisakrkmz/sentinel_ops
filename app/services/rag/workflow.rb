@@ -251,7 +251,7 @@ module Rag
         kind: :verify,
         provider: @relevance_provider.provider,
         model: @relevance_provider.model,
-        prompt_version: "rag-relevance-v1",
+        prompt_version: @relevance_provider.provider == "jev" ? "rag-relevance-jev-v1" : "rag-relevance-v1",
         input_digest: input_digest(relevance_input(entries)),
         output_json: output,
         confidence: output.fetch("confidence"),

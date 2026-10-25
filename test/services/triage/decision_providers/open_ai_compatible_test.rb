@@ -134,12 +134,26 @@ class OpenAiCompatibleTriageProviderTest < ActiveSupport::TestCase
     end
   end
 
-  test "Jev remains explicitly unavailable until its official request contract is verified" do
-    jev = Triage::DecisionProviders::JevProvider.new
+  test "sends reasoning_effort only when it is configured" do
+    response = FakeResponse.new(code: "200", body: { choices: [ { message: { content: JSON.generate(output) } } ] }.to_json)
+    with_http_responses([ response, response ]) do |http|
+      provider.call(incident("VPN access failure"))
+      configured = Triage::DecisionProviders::OpenAiCompatible.new(
+        provider: "gemini", api_key: "k", model: "m", endpoint: "https://example.test/v1/chat/completions", reasoning_effort: "low"
+      )
+      configured.call(incident("VPN access failure"))
+
+      assert_not JSON.parse(http.requests.first.body).key?("reasoning_effort")
+      assert_equal "low", JSON.parse(http.requests.last.body).fetch("reasoning_effort")
+    end
+  end
+
+  test "Jev without an API key is honestly unavailable" do
+    jev = Triage::DecisionProviders::JevProvider.new(client: Jev::Client.new(api_key: nil))
     error = assert_raises(Triage::ProviderError) { jev.call(incident("VPN access failure")) }
 
     assert_equal "jev", jev.provider
-    assert_equal "jev_contract_unverified", error.code
+    assert_equal "jev_not_configured", error.code
   end
 
   test "rejects non-HTTPS provider endpoints" do

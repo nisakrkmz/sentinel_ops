@@ -19,14 +19,15 @@ module Rag
       def self.relevance
         provider = ENV["DECISION_PROVIDER"].to_s
         return unavailable("decision_provider_not_configured") if provider.empty?
-        return unavailable("jev_contract_unverified") if provider == "jev"
+        return JevRelevance.new if provider == "jev"
         return unavailable("unsupported_decision_provider") unless SUPPORTED_PROVIDERS.include?(provider)
 
         JsonChat.new(
           provider: provider,
           api_key: ENV["DECISION_API_KEY"],
           model: ENV["DECISION_MODEL"],
-          endpoint: ENV["DECISION_BASE_URL"]
+          endpoint: ENV["DECISION_BASE_URL"],
+          reasoning_effort: ENV["DECISION_REASONING_EFFORT"]
         )
       end
 
@@ -39,7 +40,8 @@ module Rag
           provider: provider,
           api_key: ENV["LLM_API_KEY"],
           model: ENV["LLM_MODEL"],
-          endpoint: ENV["LLM_BASE_URL"]
+          endpoint: ENV["LLM_BASE_URL"],
+          reasoning_effort: ENV["LLM_REASONING_EFFORT"]
         )
       end
 
